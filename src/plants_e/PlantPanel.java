@@ -72,7 +72,6 @@ public class PlantPanel extends JPanel {
         for (SunView sv : sunViews) sv.render();
         for (ZombieView zv : zombieViews) zv.render();
 
-        repaint();
     }
 
     private void syncPlants() {

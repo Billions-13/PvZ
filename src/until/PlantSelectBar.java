@@ -61,8 +61,9 @@ public class PlantSelectBar extends JPanel {
     }
 
     private URL find(String file) {
-        return getClass().getResource("/resources/img_P/" + file);
+        return getClass().getResource("/img_P/" + file);
     }
+
 
     public void setListener(Listener listener) {
         this.listener = listener;
