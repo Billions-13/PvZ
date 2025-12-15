@@ -2,10 +2,15 @@ package until;
 
 import plants_e.PlantType;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class PlantSelectBar extends JPanel {
 
@@ -13,57 +18,93 @@ public class PlantSelectBar extends JPanel {
         void onPick(PlantType type);
     }
 
-    public static final int ICON = 45;
-    public static final int GAP = 6;
+    public static final int ICON = 65;
+    public static final int GAP = 7;
     public static final int H = ICON + GAP * 2;
     public static final int W = (ICON + GAP) * 5 + GAP;
 
+    private static final String BASE = "/resources/img_P/";
+
+    private static final class Item {
+        final PlantType type;
+        final BufferedImage img;
+        Item(PlantType type, BufferedImage img) { this.type = type; this.img = img; }
+    }
+
+    private final List<Item> items = new ArrayList<>();
     private Listener listener;
+    private int selectedIndex = -1;
 
     public PlantSelectBar() {
-        setLayout(new FlowLayout(FlowLayout.LEFT, GAP, GAP));
         setOpaque(true);
         setBackground(new Color(0, 0, 0, 120));
         setSize(W, H);
 
-        addBtn("walnut.png", PlantType.WALNUT);
-        addBtn("sunflower.png", PlantType.SUNFLOWER);
-        addBtn("snowpea.png", PlantType.SNOWPEA);
-        addBtn("chomper1.png", PlantType.CHOMPER);
-        addBtn("peashooter.png", PlantType.PEASHOOTER);
-    }
+        setFocusable(false);
+        setRequestFocusEnabled(false);
 
-    private void addBtn(String file, PlantType plantType) {
-        JButton b = new JButton(scaled(file, ICON, ICON));
-        b.setBorderPainted(false);
-        b.setFocusPainted(false);
-        b.setContentAreaFilled(false);
-        b.setPreferredSize(new Dimension(ICON, ICON));
-        b.addActionListener(e -> {
-            if (listener != null) listener.onPick(plantType);
+        addItem("walnut.png", PlantType.WALNUT);
+        addItem("sunflower.png", PlantType.SUNFLOWER);
+        addItem("snowpea.png", PlantType.SNOWPEA);
+        addItem("chomper1.png", PlantType.CHOMPER);
+        addItem("peashooter.png", PlantType.PEASHOOTER);
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int idx = hitIndex(e.getX(), e.getY());
+                if (idx < 0) return;
+                selectedIndex = idx;
+                repaint();
+                if (listener != null) listener.onPick(items.get(idx).type);
+            }
         });
-        add(b);
     }
 
-    private ImageIcon scaled(String file, int w, int h) {
-        URL url = find(file);
-        if (url == null) return new ImageIcon(new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB));
-
-        ImageIcon raw = new ImageIcon(url);
-        Image img = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
-
-        BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = bi.createGraphics();
-        g2.drawImage(img, 0, 0, null);
-        g2.dispose();
-
-        return new ImageIcon(bi);
+    private void addItem(String file, PlantType type) {
+        items.add(new Item(type, loadScaled(BASE + file, ICON, ICON)));
     }
 
-    private URL find(String file) {
-        return getClass().getResource("/img_P/" + file);
+    private BufferedImage loadScaled(String path, int w, int h) {
+        try {
+            BufferedImage raw = ImageIO.read(Objects.requireNonNull(getClass().getResource(path)));
+            Image scaled = raw.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2 = out.createGraphics();
+            g2.drawImage(scaled, 0, 0, null);
+            g2.dispose();
+            return out;
+        } catch (Exception ex) {
+            return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        }
     }
 
+    private int hitIndex(int x, int y) {
+        if (y < GAP || y > GAP + ICON) return -1;
+        for (int i = 0; i < items.size(); i++) {
+            int ix = GAP + i * (ICON + GAP);
+            if (x >= ix && x <= ix + ICON) return i;
+        }
+        return -1;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+
+        for (int i = 0; i < items.size(); i++) {
+            int x = GAP + i * (ICON + GAP);
+            int y = GAP;
+
+            g2.drawImage(items.get(i).img, x, y, null);
+
+            if (i == selectedIndex) {
+                g2.setColor(new Color(255, 255, 255, 220));
+                g2.drawRect(x - 2, y - 2, ICON + 4, ICON + 4);
+            }
+        }
+    }
 
     public void setListener(Listener listener) {
         this.listener = listener;
