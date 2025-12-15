@@ -8,11 +8,10 @@ public class PlantView {
 
     private final Plant plant;
     private final JComponent view;
-
-    private static final int W = 75;
-    private static final int H = 75;
-
     private final Image img;
+
+    private final int w;
+    private final int h;
 
     public PlantView(Plant plant) {
         this.plant = plant;
@@ -23,23 +22,33 @@ public class PlantView {
         ImageIcon icon = new ImageIcon(Objects.requireNonNull(
                 getClass().getResource("/resources/img_P/" + spritePath)
         ));
+
         img = icon.getImage();
+
+        if (plant.getPlantType() == PlantType.WALNUT) {
+            w = icon.getIconWidth();
+            h = icon.getIconHeight();
+        } else {
+            w = 75;
+            h = 75;
+        }
 
         view = new JComponent() {
             @Override
             protected void paintComponent(Graphics g) {
-                g.drawImage(img, 0, 0, W, H, this);
+                super.paintComponent(g);
+                g.drawImage(img, 0, 0, w, h, this);
             }
         };
 
         view.setOpaque(false);
-        view.setSize(W, H);
+        view.setSize(w, h);
         updatePosition();
     }
 
     private void updatePosition() {
-        int x = (int) plant.getPositionX() - W / 2;
-        int y = (int) plant.getPositionY() - H / 2;
+        int x = (int) plant.getPositionX() - w / 2;
+        int y = (int) plant.getPositionY() - h / 2;
         view.setLocation(x, y);
     }
 
