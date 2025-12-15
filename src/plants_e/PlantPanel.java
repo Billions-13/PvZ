@@ -274,23 +274,26 @@ public class PlantPanel extends JPanel {
         g2.setStroke(GRID_STROKE);
         g2.setColor(GRID_COLOR);
 
-        int leftWorld = camX - camSX;
-        int topWorld = camY - camSY;
+        int cols = 11; // số cột cần vẽ
+        int rows = 7;  // số hàng cần vẽ
 
-        int startX = (int) Math.floor(leftWorld / (double) TILE) * TILE;
-        int startY = (int) Math.floor(topWorld / (double) TILE) * TILE;
+        int leftWorld = 0;
+        int topWorld = 0;
 
-        int rightWorld = leftWorld + getWidth();
-        int bottomWorld = topWorld + getHeight();
-
-        for (int x = startX; x <= rightWorld; x += TILE) {
-            int sx = x - camX + camSX;
-            g2.drawLine(sx, 0, sx, getHeight());
+        // Vẽ các đường dọc (cột)
+        for (int c = 0; c <= cols; c++) {
+            int wx = leftWorld + c * TILE;
+            int sx = wx - camX + camSX;
+            g2.drawLine(sx, -camY + camSY,
+                    sx, rows * TILE - camY + camSY);
         }
 
-        for (int y = startY; y <= bottomWorld; y += TILE) {
-            int sy = y - camY + camSY;
-            g2.drawLine(0, sy, getWidth(), sy);
+        // Vẽ các đường ngang (hàng)
+        for (int r = 0; r <= rows; r++) {
+            int wy = topWorld + r * TILE;
+            int sy = wy - camY + camSY;
+            g2.drawLine(-camX + camSX, sy,
+                    cols * TILE - camX + camSX, sy);
         }
 
         g2.setColor(oldC);
