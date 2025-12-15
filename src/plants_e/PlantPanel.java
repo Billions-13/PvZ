@@ -200,8 +200,8 @@ public class PlantPanel extends JPanel {
         lastGX = gx;
         lastGY = gy;
 
-        int w = 75;
-        int h = 75;
+        int w = 100;
+        int h = 100;
 
         g2.drawImage(img, sx - w / 2, sy - h / 2, w, h, null);
     }

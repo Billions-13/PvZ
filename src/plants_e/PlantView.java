@@ -1,88 +1,58 @@
-    package plants_e;
-    import javax.swing.*;
-    import java.util.Objects;
+package plants_e;
 
-    /**
-     * View cho 1 Plant:
-     * - Giữ tham chiếu tới Plant (model).
-     * - Giữ JLabel hiển thị GIF.
-     * - Mỗi frame: đọc state/position từ Plant rồi update JLabel.
-     */
-    public class PlantView {
+import javax.swing.*;
+import java.awt.*;
+import java.util.Objects;
 
-        private final Plant plant;
-        private final JLabel label;
+public class PlantView {
 
-        // Nếu bạn muốn dùng row/col thì có thể dùng TILE_SIZE.
-        private static final int TILE_SIZE = 11;
+    private final Plant plant;
+    private final JComponent view;
 
-        public PlantView(Plant plant) {
-            this.plant = plant;
+    private static final int W = 75;
+    private static final int H = 75;
 
-            // Load sprite từ đường dẫn trong Plant.
-            // Giả sử spritePath = "Peashooter.gif" và file nằm ở resources/sprites/Peashooter.gif
-            String spritePath = plant.getSpritePath();
-            if (spritePath == null || spritePath.isEmpty()) {
-                spritePath = "default_plant.gif"; // fallback, nếu bạn có.
+    private final Image img;
+
+    public PlantView(Plant plant) {
+        this.plant = plant;
+
+        String spritePath = plant.getSpritePath();
+        if (spritePath == null || spritePath.isEmpty()) spritePath = "default_plant.gif";
+
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(
+                getClass().getResource("/resources/img_P/" + spritePath)
+        ));
+        img = icon.getImage();
+
+        view = new JComponent() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                g.drawImage(img, 0, 0, W, H, this);
             }
+        };
 
-            ImageIcon icon = new ImageIcon(
-                    Objects.requireNonNull(
-                            getClass().getResource("/resources/img_P/" + spritePath)
-                    )
-            );
-
-
-            label = new JLabel(icon);
-            label.setSize(icon.getIconWidth(), icon.getIconHeight());
-
-            // Đặt vị trí ban đầu theo positionX/Y của Plant
-            updatePosition();
-        }
-
-        /** Cập nhật vị trí JLabel dựa trên Plant. */
-        private void updatePosition() {
-            // Nếu bạn dùng pixel thật trong Plant:
-            int x = (int) plant.getPositionX();
-            int y = (int) plant.getPositionY();
-
-            // Nếu sau này dùng row/col:
-            // int x = plant.getCol() * TILE_SIZE;
-            // int y = plant.getRow() * TILE_SIZE;
-
-            label.setLocation(x, y);
-        }
-
-        /**
-         * Gọi mỗi frame:
-         * - Cập nhật vị trí.
-         */
-        public void render() {
-            // Cập nhật tọa độ
-            updatePosition();
-
-            // Nếu sau này bạn có nhiều GIF cho từng state:
-            // PlantState state = plant.getState();
-            // switch (state) {
-            //     case ATTACKING:
-            //         label.setIcon(new ImageIcon(getClass().getResource("/sprites/Peashooter_attack.gif")));
-            //         break;
-            //     case DYING:
-            //     case DEAD:
-            //         label.setIcon(new ImageIcon(getClass().getResource("/sprites/Peashooter_die.gif")));
-            //         break;
-            //     default:
-            //         label.setIcon(new ImageIcon(getClass().getResource("/sprites/" + plant.getSpritePath())));
-            // }
-
-            // Hiện tại: dùng 1 GIF duy nhất, nên không cần đổi icon.
-        }
-
-        public JLabel getLabel() {
-            return label;
-        }
-
-        public Plant getPlant() {
-            return plant;
-        }
+        view.setOpaque(false);
+        view.setSize(W, H);
+        updatePosition();
     }
+
+    private void updatePosition() {
+        int x = (int) plant.getPositionX() - W / 2;
+        int y = (int) plant.getPositionY() - H / 2;
+        view.setLocation(x, y);
+    }
+
+    public void render() {
+        updatePosition();
+        view.repaint();
+    }
+
+    public JComponent getLabel() {
+        return view;
+    }
+
+    public Plant getPlant() {
+        return plant;
+    }
+}
