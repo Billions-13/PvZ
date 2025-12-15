@@ -13,6 +13,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     private Thread thread;
     private final int fps = 60;
+    private PlantType pickedType = null;
 
     public final int block = 40;
     public final int maxcol = 45;
@@ -66,7 +67,8 @@ public class GamePanel extends JPanel implements Runnable {
         add(selectBar);
         setComponentZOrder(selectBar, 0);
 
-        selectBar.setListener(type -> System.out.println("Pick: " + type));
+        selectBar.setListener(type -> pickedType = type);
+
 
         plantPanel.addMouseListener(new MouseAdapter() {
             @Override
