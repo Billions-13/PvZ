@@ -73,6 +73,11 @@ public class GamePanel extends JPanel implements Runnable {
         plantPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+
+                int gx = e.getX() + plantPanel.getX();
+                int gy = e.getY() + plantPanel.getY();
+                if (selectBar.getBounds().contains(gx, gy)) return;
+
                 int worldX = camX - camSX + e.getX();
                 int worldY = camY - camSY + e.getY();
 
@@ -80,10 +85,19 @@ public class GamePanel extends JPanel implements Runnable {
                 int col = Math.max(0, Math.min(maxcol - 1, worldX / tile));
                 int row = Math.max(0, Math.min(maxrow - 1, worldY / tile));
 
+                double px = col * tile;
+                double py = row * tile;
+
+                if (pickedType != null) {
+                    plantInput.plant(pickedType, row, col, px, py);
+                    return;
+                }
+
                 targetX = col * tile + tile / 2.0;
                 targetY = row * tile + tile / 2.0;
             }
         });
+
     }
 
     @Override

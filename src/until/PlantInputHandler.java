@@ -23,4 +23,11 @@ public class PlantInputHandler {
         Plant p = factory.createPlant(pt, row, col, x, y);
         world.addPlant(p);
     }
+
+
+    public void plant(PlantType type, int row, int col, double x, double y) {
+        Plant p = factory.createPlant(type, row, col, x, y);
+        world.addPlant(p);
+    }
+
 }

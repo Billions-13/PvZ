@@ -14,7 +14,7 @@
         private final JLabel label;
 
         // Nếu bạn muốn dùng row/col thì có thể dùng TILE_SIZE.
-        private static final int TILE_SIZE = 80;
+        private static final int TILE_SIZE = 11;
 
         public PlantView(Plant plant) {
             this.plant = plant;

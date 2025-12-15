@@ -4,7 +4,7 @@ public class Walnut extends Plant {
 
     private static final int MAX_HP = 4000;
 
-    private static final String FULL = "walnut_full.gif";
+    private static final String FULL = "walnut.gif";
     private static final String CRACK1 = "walnut_crack1.gif";
     private static final String CRACK2 = "walnut_crack2.gif";
 

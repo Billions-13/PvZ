@@ -4,7 +4,7 @@ public class    Sunflower extends Plant {
     private static final int default_health = 300;
     private static final int default_sunCost = 50;
     private static final double cooldown = 7.5;
-    private static final String default_spritePath = "SUNFLOWE.gif";
+    private static final String default_spritePath = "SUNFLOWER.gif";
 
     private final SunProductionBehavior sunProductionBehavior;
 
