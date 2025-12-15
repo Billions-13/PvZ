@@ -43,17 +43,9 @@ public class PlantView {
 
         view.setOpaque(false);
         view.setSize(w, h);
-        updatePosition();
-    }
-
-    private void updatePosition() {
-        int x = (int) plant.getPositionX() - w / 2;
-        int y = (int) plant.getPositionY() - h / 2;
-        view.setLocation(x, y);
     }
 
     public void render() {
-        updatePosition();
         view.repaint();
     }
 

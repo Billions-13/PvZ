@@ -5,7 +5,6 @@ import until.GameWorld;
 import Zombies.Zombie;
 import Zombies.ZombieView;
 import java.util.List;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -38,6 +37,12 @@ public class PlantPanel extends JPanel {
     private static final double MOVE_EPS = 0.001;
     private static final long HOLD_MOVING_NS = 120_000_000L;
 
+    private static final int TILE = 80;
+
+    private static final boolean DRAW_GRID = true;
+    private static final Color GRID_COLOR = new Color(139, 90, 43, 170);
+    private static final Stroke GRID_STROKE = new BasicStroke(2.2f);
+
     public PlantPanel(GameWorld world, Manager tileManager) {
         this.world = world;
         this.tileManager = tileManager;
@@ -61,6 +66,18 @@ public class PlantPanel extends JPanel {
         this.camSY = camSY;
     }
 
+    public int snapColFromMouse(int mx) {
+        int worldX = camX - camSX + mx;
+        if (worldX < 0) return 0;
+        return worldX / TILE;
+    }
+
+    public int snapRowFromMouse(int my) {
+        int worldY = camY - camSY + my;
+        if (worldY < 0) return 0;
+        return worldY / TILE;
+    }
+
     public void render() {
         syncPlants();
         syncProjectiles();
@@ -72,6 +89,7 @@ public class PlantPanel extends JPanel {
         for (SunView sv : sunViews) sv.render();
         for (ZombieView zv : zombieViews) zv.render();
 
+        applyCameraToAllViews();
     }
 
     private void syncPlants() {
@@ -83,6 +101,7 @@ public class PlantPanel extends JPanel {
                 it.remove();
             }
         }
+
         for (Plant p : world.getPlants()) {
             boolean exists = false;
             for (PlantView pv : plantViews) if (pv.getPlant() == p) { exists = true; break; }
@@ -103,6 +122,7 @@ public class PlantPanel extends JPanel {
                 it.remove();
             }
         }
+
         for (Projectile p : world.getProjectiles()) {
             boolean exists = false;
             for (ProjectileView pv : projectileViews) if (pv.getProjectile() == p) { exists = true; break; }
@@ -123,6 +143,7 @@ public class PlantPanel extends JPanel {
                 it.remove();
             }
         }
+
         for (Sun s : world.getSuns()) {
             boolean exists = false;
             for (SunView sv : sunViews) if (sv.getSun() == s) { exists = true; break; }
@@ -142,6 +163,7 @@ public class PlantPanel extends JPanel {
             }
             return false;
         });
+
         for (Zombie z : world.getZombies()) {
             boolean exists = false;
             for (ZombieView zv : zombieViews) if (zv.getZombie() == z) { exists = true; break; }
@@ -153,12 +175,52 @@ public class PlantPanel extends JPanel {
         }
     }
 
+    private void applyCameraToAllViews() {
+        for (PlantView pv : plantViews) {
+            JComponent c = pv.getLabel();
+            Plant p = pv.getPlant();
+
+            int w = c.getWidth();
+            int h = c.getHeight();
+
+            double wx = p.getCol() * (double) TILE + (TILE - w) / 2.0;
+            double wy = p.getRow() * (double) TILE + (TILE - h) / 2.0;
+
+            placeTopLeftWorld(c, wx, wy);
+        }
+
+        for (ProjectileView pv : projectileViews) {
+            JLabel c = pv.getLabel();
+            Projectile p = pv.getProjectile();
+            placeTopLeftWorld(c, p.getX(), p.getY());
+        }
+
+        for (SunView sv : sunViews) {
+            JLabel c = sv.getLabel();
+            Sun s = sv.getSun();
+            placeTopLeftWorld(c, s.getX(), s.getY());
+        }
+
+        for (ZombieView zv : zombieViews) {
+            JLabel c = zv.getLabel();
+            Zombie z = zv.getZombie();
+            placeTopLeftWorld(c, z.getX(), z.getY());
+        }
+    }
+
+    private void placeTopLeftWorld(JComponent c, double worldX, double worldY) {
+        int sx = (int) Math.round(worldX - camX + camSX);
+        int sy = (int) Math.round(worldY - camY + camSY);
+        c.setLocation(sx, sy);
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
         if (tileManager != null) tileManager.draw(g2, camX, camY, camSX, camSY);
+        if (DRAW_GRID) drawGrid(g2);
 
         if (world == null || world.getGardener() == null) return;
 
@@ -189,9 +251,8 @@ public class PlantPanel extends JPanel {
         boolean moving = now < movingUntilNs;
 
         BufferedImage img;
-        if (moving) {
-            img = run[runIndex];
-        } else {
+        if (moving) img = run[runIndex];
+        else {
             pixelAcc = 0;
             runIndex = 0;
             img = stand;
@@ -200,9 +261,39 @@ public class PlantPanel extends JPanel {
         lastGX = gx;
         lastGY = gy;
 
-        int w = 100;
-        int h = 100;
+        int w = 75;
+        int h = 75;
 
         g2.drawImage(img, sx - w / 2, sy - h / 2, w, h, null);
+    }
+
+    private void drawGrid(Graphics2D g2) {
+        Stroke oldS = g2.getStroke();
+        Color oldC = g2.getColor();
+
+        g2.setStroke(GRID_STROKE);
+        g2.setColor(GRID_COLOR);
+
+        int leftWorld = camX - camSX;
+        int topWorld = camY - camSY;
+
+        int startX = (int) Math.floor(leftWorld / (double) TILE) * TILE;
+        int startY = (int) Math.floor(topWorld / (double) TILE) * TILE;
+
+        int rightWorld = leftWorld + getWidth();
+        int bottomWorld = topWorld + getHeight();
+
+        for (int x = startX; x <= rightWorld; x += TILE) {
+            int sx = x - camX + camSX;
+            g2.drawLine(sx, 0, sx, getHeight());
+        }
+
+        for (int y = startY; y <= bottomWorld; y += TILE) {
+            int sy = y - camY + camSY;
+            g2.drawLine(0, sy, getWidth(), sy);
+        }
+
+        g2.setColor(oldC);
+        g2.setStroke(oldS);
     }
 }

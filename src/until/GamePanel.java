@@ -82,9 +82,8 @@ public class GamePanel extends JPanel implements Runnable {
                 int worldY = camY - camSY + e.getY();
 
                 int tile = block * 2;
-                int col = Math.max(0, Math.min(maxcol - 1, worldX / tile));
-                int row = Math.max(0, Math.min(maxrow - 1, worldY / tile));
-
+                int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
+                int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
                 double px = col * tile;
                 double py = row * tile;
 
