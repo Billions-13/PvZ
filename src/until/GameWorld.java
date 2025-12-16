@@ -30,9 +30,6 @@ public class GameWorld implements ProjectileWorld {
         return gardener;
     }
 
-
-    /* ================= SETUP ================= */
-
     public void setSpawner(ZombieSpawner spawner) {
         this.spawner = spawner;
     }
@@ -41,12 +38,22 @@ public class GameWorld implements ProjectileWorld {
         this.gardener = gardener;
     }
 
-    /* ================= ADD / REMOVE ================= */
-
     public void addPlant(Plant p) {
         if (p == null) return;
         plants.add(p);
         p.onPlaced();
+    }
+
+    public boolean removePlantAt(int row, int col) {
+        for (int i = 0; i < plants.size(); i++) {
+            Plant p = plants.get(i);
+            if (p != null && p.isAlive() && p.getRow() == row && p.getCol() == col) {
+                plants.remove(i);
+                p.onRemoved();
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addZombie(Zombie z) {
@@ -57,14 +64,11 @@ public class GameWorld implements ProjectileWorld {
         suns.add(s);
     }
 
-    /* ================= UPDATE ================= */
-
     public void update(double dt) {
         if (win || lose) return;
 
         double now = System.nanoTime() / 1e9;
 
-        // Update plant
         for (Plant p : plants) {
             p.update(now);
             if (p instanceof Sunflower s) {
@@ -73,13 +77,11 @@ public class GameWorld implements ProjectileWorld {
             }
         }
 
-        // Update zombie
         Iterator<Zombie> zit = zombies.iterator();
         while (zit.hasNext()) {
             Zombie z = zit.next();
             z.update(dt);
 
-            // Zombie ăn plant
             boolean hitPlant = false;
             for (Plant p : plants) {
                 if (z.isAlive() && p.isAlive()
@@ -98,7 +100,7 @@ public class GameWorld implements ProjectileWorld {
             if (!hitPlant && z.isAlive() && z.getState() == ZombieState.ATTACK) {
                 z.setState(ZombieState.ADVANCE);
             }
-            // Zombie ăn gardener → thua
+
             if (gardener != null && z.isAlive()) {
                 if (Math.abs(z.getX() - gardener.getX()) < 30 &&
                         Math.abs(z.getY() - gardener.getY()) < 30) {
@@ -107,7 +109,6 @@ public class GameWorld implements ProjectileWorld {
                 }
             }
 
-            // Zombie tới nhà → thua
             if (z.getX() < 0) lose = true;
 
             if (z.isDead()) {
@@ -116,15 +117,12 @@ public class GameWorld implements ProjectileWorld {
             }
         }
 
-        // Update projectile
         attackHandler.updateProjectiles(this, dt);
 
-        // Spawn zombie
         if (spawner != null) {
             spawner.update(dt);
         }
 
-        // Qua wave
         if (zombies.isEmpty() && spawner != null && spawner.isWaveDone()) {
             wave++;
             if (wave > 4) {
@@ -134,8 +132,6 @@ public class GameWorld implements ProjectileWorld {
             }
         }
     }
-
-    /* ================= PROJECTILE WORLD ================= */
 
     @Override
     public Zombie findFirstZombieInPath(int row, double projectileX) {
@@ -152,8 +148,6 @@ public class GameWorld implements ProjectileWorld {
         zombie.slow(3.0);
     }
 
-    /* ================= GETTER ================= */
-
     public int getWave() { return wave; }
     public int getZombiesKilled() { return zombiesKilled; }
     public boolean isWin() { return win; }
@@ -163,5 +157,4 @@ public class GameWorld implements ProjectileWorld {
     public List<Projectile> getProjectiles() { return attackHandler.getProjectilesSnapshot(); }
     public List<Sun> getSuns() { return suns; }
     public List<Zombie> getZombies() {return zombies;}
-
 }

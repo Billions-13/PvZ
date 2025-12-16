@@ -4,15 +4,23 @@ import Tile.Manager;
 import plants_e.*;
 import entity.Gardener;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 public class GamePanel extends JPanel implements Runnable {
 
     private Thread thread;
     private final int fps = 60;
     private PlantType pickedType = null;
+
+    private boolean digMode = false;
+    private Cursor digCursor;
+    private final Cursor normalCursor = Cursor.getDefaultCursor();
 
     public final int block = 40;
     public final int maxcol = 45;
@@ -45,27 +53,6 @@ public class GamePanel extends JPanel implements Runnable {
     private Double targetY = null;
     private static final double CLICK_MOVE_SPEED = 220.0;
 
-    // ===== [NEW] pending placement: click icon -> click tile -> run -> planting 1s -> spawn plant -> reset =====
-    private static final class PendingPlant {
-        final PlantType type;
-        final int row;
-        final int col;
-        final double px;
-        final double py;
-        boolean plantingStarted;
-        double plantingLeft;
-
-        PendingPlant(PlantType type, int row, int col, double px, double py) {
-            this.type = type;
-            this.row = row;
-            this.col = col;
-            this.px = px;
-            this.py = py;
-        }
-    }
-
-    private PendingPlant pending = null;
-
     public GamePanel() {
         setLayout(null);
         setFocusable(true);
@@ -87,7 +74,19 @@ public class GamePanel extends JPanel implements Runnable {
         add(selectBar);
         setComponentZOrder(selectBar, 0);
 
-        selectBar.setListener(type -> pickedType = type);
+        digCursor = buildDigCursor();
+
+        selectBar.setListener(type -> {
+            if (type == null) {
+                pickedType = null;
+                digMode = true;
+                plantPanel.setCursor(digCursor);
+            } else {
+                digMode = false;
+                pickedType = type;
+                plantPanel.setCursor(normalCursor);
+            }
+        });
 
         plantPanel.addMouseListener(new MouseAdapter() {
             @Override
@@ -98,29 +97,46 @@ public class GamePanel extends JPanel implements Runnable {
                 if (selectBar.getBounds().contains(gx, gy)) return;
 
                 int tile = block * 2;
-
                 int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
                 int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
-
                 double px = col * tile;
                 double py = row * tile;
 
-                // ===== [NEW] nếu đã chọn plant -> tạo pending + bắt player chạy tới ô bằng collect anim =====
-                if (pickedType != null) {
-                    pending = new PendingPlant(pickedType, row, col, px, py);
-
-                    targetX = col * tile + tile / 2.0;
-                    targetY = row * tile + tile / 2.0;
-
-                    plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.COLLECT);
+                if (digMode) {
+                    world.removePlantAt(row, col);
+                    digMode = false;
+                    plantPanel.setCursor(normalCursor);
+                    selectBar.clearSelection();
                     return;
                 }
 
-                // ===== click move bình thường =====
+                if (pickedType != null) {
+                    plantInput.plant(pickedType, row, col, px, py);
+                    pickedType = null;
+                    selectBar.clearSelection();
+                    return;
+                }
+
                 targetX = col * tile + tile / 2.0;
                 targetY = row * tile + tile / 2.0;
             }
         });
+    }
+
+    private Cursor buildDigCursor() {
+        try {
+            BufferedImage raw = ImageIO.read(Objects.requireNonNull(
+                    getClass().getResource("/resources/img_P/dig.png")
+            ));
+            Image img = raw.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+            BufferedImage cur = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2 = cur.createGraphics();
+            g2.drawImage(img, 0, 0, null);
+            g2.dispose();
+            return Toolkit.getDefaultToolkit().createCustomCursor(cur, new Point(0, 0), "dig");
+        } catch (Exception ex) {
+            return normalCursor;
+        }
     }
 
     @Override
@@ -161,63 +177,34 @@ public class GamePanel extends JPanel implements Runnable {
         if (keyboardMoving) {
             targetX = null;
             targetY = null;
-
-            // nếu đang pending mà bạn bấm WASD thì coi như hủy chạy theo click (không spawn cây)
-            if (pending != null && !pending.plantingStarted) {
-                pending = null;
-                plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.AUTO);
-            }
         }
 
-        // ===== [NEW] đang planting thì khóa movement 1s =====
-        if (pending != null && pending.plantingStarted) {
-            pending.plantingLeft -= dt;
-            if (pending.plantingLeft <= 0) {
-                plantInput.plant(pending.type, pending.row, pending.col, pending.px, pending.py);
+        if (targetX != null && targetY != null && !keyboardMoving) {
+            double dx = targetX - gardener.getX();
+            double dy = targetY - gardener.getY();
+            double dist = Math.hypot(dx, dy);
 
-                pending = null;
-                pickedType = null;
+            if (dist < 2.0) {
+                targetX = null;
+                targetY = null;
+            } else {
+                double vx = dx / dist * CLICK_MOVE_SPEED;
+                double vy = dy / dist * CLICK_MOVE_SPEED;
 
-                plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.AUTO);
+                double nx = gardener.getX() + vx * dt;
+                double ny = gardener.getY() + vy * dt;
+
+                int worldW = maxcol * block * 2;
+                int worldH = maxrow * block * 2;
+
+                nx = Math.max(0, Math.min(nx, worldW));
+                ny = Math.max(0, Math.min(ny, worldH));
+
+                gardener.setX(nx);
+                gardener.setY(ny);
             }
         } else {
-            // movement bình thường (click-move hoặc WASD)
-            boolean clickMoving = targetX != null && targetY != null && !keyboardMoving;
-
-            if (clickMoving) {
-                double dx = targetX - gardener.getX();
-                double dy = targetY - gardener.getY();
-                double dist = Math.hypot(dx, dy);
-
-                if (dist < 2.0) {
-                    targetX = null;
-                    targetY = null;
-
-                    // ===== [NEW] nếu tới nơi và đang pending -> bắt đầu planting 1s =====
-                    if (pending != null && !pending.plantingStarted) {
-                        pending.plantingStarted = true;
-                        pending.plantingLeft = 1.0;
-                        plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.PLANTING);
-                    }
-                } else {
-                    double vx = dx / dist * CLICK_MOVE_SPEED;
-                    double vy = dy / dist * CLICK_MOVE_SPEED;
-
-                    double nx = gardener.getX() + vx * dt;
-                    double ny = gardener.getY() + vy * dt;
-
-                    int worldW = maxcol * block * 2;
-                    int worldH = maxrow * block * 2;
-
-                    nx = Math.max(0, Math.min(nx, worldW));
-                    ny = Math.max(0, Math.min(ny, worldH));
-
-                    gardener.setX(nx);
-                    gardener.setY(ny);
-                }
-            } else {
-                gardener.update(key, dt, 0, 0, maxcol * block * 2, maxrow * block * 2);
-            }
+            gardener.update(key, dt, 0, 0, maxcol * block * 2, maxrow * block * 2);
         }
 
         camSX = mwidth / 2;

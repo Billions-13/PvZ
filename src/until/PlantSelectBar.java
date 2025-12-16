@@ -21,7 +21,7 @@ public class PlantSelectBar extends JPanel {
     public static final int ICON = 65;
     public static final int GAP = 7;
     public static final int H = ICON + GAP * 2;
-    public static final int W = (ICON + GAP) * 5 + GAP;
+    public static final int W = (ICON + GAP) * 6 + GAP;
 
     private static final String BASE = "/resources/img_P/";
 
@@ -48,6 +48,8 @@ public class PlantSelectBar extends JPanel {
         addItem("snowpea.png", PlantType.SNOWPEA);
         addItem("chomper1.png", PlantType.CHOMPER);
         addItem("peashooter.png", PlantType.PEASHOOTER);
+
+        addItem("shovel.png", null);
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -86,6 +88,11 @@ public class PlantSelectBar extends JPanel {
             if (x >= ix && x <= ix + ICON) return i;
         }
         return -1;
+    }
+
+    public void clearSelection() {
+        selectedIndex = -1;
+        repaint();
     }
 
     @Override

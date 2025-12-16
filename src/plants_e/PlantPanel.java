@@ -4,16 +4,14 @@ import Tile.Manager;
 import until.GameWorld;
 import Zombies.Zombie;
 import Zombies.ZombieView;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
-import java.util.List;
 
 public class PlantPanel extends JPanel {
-
-    public enum AnimMode { AUTO, COLLECT, PLANTING }
 
     private final GameWorld world;
     private final Manager tileManager;
@@ -28,16 +26,8 @@ public class PlantPanel extends JPanel {
     private BufferedImage stand;
     private final BufferedImage[] run = new BufferedImage[3];
 
-    // ===== [NEW] collect + planting =====
-    private BufferedImage planting;
-    private final BufferedImage[] collect = new BufferedImage[3];
-    private AnimMode animMode = AnimMode.AUTO;
-
     private int runIndex;
     private double pixelAcc;
-
-    private int collectIndex;
-    private double collectAcc;
 
     private double lastGX = Double.NaN;
     private double lastGY = Double.NaN;
@@ -64,23 +54,8 @@ public class PlantPanel extends JPanel {
             run[0] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/run1.png")));
             run[1] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/run2.png")));
             run[2] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/run3.png")));
-
-            // ===== [NEW] =====
-            planting = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/planting.png")));
-            collect[0] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect1.png")));
-            collect[1] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect2.png")));
-            collect[2] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect3.png")));
         } catch (Exception e) {
             throw new RuntimeException("Cannot load player sprites", e);
-        }
-    }
-
-    // ===== [NEW] called by GamePanel =====
-    public void setPlayerAnimMode(AnimMode mode) {
-        animMode = mode == null ? AnimMode.AUTO : mode;
-        if (animMode == AnimMode.AUTO) {
-            collectAcc = 0;
-            collectIndex = 0;
         }
     }
 
@@ -118,10 +93,13 @@ public class PlantPanel extends JPanel {
     }
 
     private void syncPlants() {
+        Set<Plant> aliveInWorld = new HashSet<>(world.getPlants());
+
         Iterator<PlantView> it = plantViews.iterator();
         while (it.hasNext()) {
             PlantView pv = it.next();
-            if (!pv.getPlant().isAlive()) {
+            Plant p = pv.getPlant();
+            if (p == null || !p.isAlive() || !aliveInWorld.contains(p)) {
                 remove(pv.getLabel());
                 it.remove();
             }
@@ -257,52 +235,38 @@ public class PlantPanel extends JPanel {
 
         long now = System.nanoTime();
 
-        boolean moved = false;
         if (!Double.isNaN(lastGX)) {
             double dx = gx - lastGX;
             double dy = gy - lastGY;
             double dist = Math.abs(dx) + Math.abs(dy);
 
             if (dist > MOVE_EPS) {
-                moved = true;
                 movingUntilNs = now + HOLD_MOVING_NS;
-
-                // AUTO run frames
                 pixelAcc += dist;
+
                 while (pixelAcc >= 20.0) {
                     pixelAcc -= 20.0;
                     runIndex = (runIndex + 1) % 3;
-                }
-
-                // COLLECT frames
-                collectAcc += dist;
-                while (collectAcc >= 20.0) {
-                    collectAcc -= 20.0;
-                    collectIndex = (collectIndex + 1) % 3;
                 }
             }
         }
 
         boolean moving = now < movingUntilNs;
-        if (!moving) {
+
+        BufferedImage img;
+        if (moving) img = run[runIndex];
+        else {
             pixelAcc = 0;
             runIndex = 0;
+            img = stand;
         }
 
         lastGX = gx;
         lastGY = gy;
 
-        BufferedImage img;
-        if (animMode == AnimMode.PLANTING) {
-            img = planting;
-        } else if (animMode == AnimMode.COLLECT) {
-            img = moving ? collect[collectIndex] : planting;
-        } else {
-            img = moving ? run[runIndex] : stand;
-        }
-
         int w = 75;
         int h = 75;
+
         g2.drawImage(img, sx - w / 2, sy - h / 2, w, h, null);
     }
 
@@ -322,15 +286,13 @@ public class PlantPanel extends JPanel {
         for (int c = 0; c <= cols; c++) {
             int wx = leftWorld + c * TILE;
             int sx = wx - camX + camSX;
-            g2.drawLine(sx, -camY + camSY,
-                    sx, rows * TILE - camY + camSY);
+            g2.drawLine(sx, -camY + camSY, sx, rows * TILE - camY + camSY);
         }
 
         for (int r = 0; r <= rows; r++) {
             int wy = topWorld + r * TILE;
             int sy = wy - camY + camSY;
-            g2.drawLine(-camX + camSX, sy,
-                    cols * TILE - camX + camSX, sy);
+            g2.drawLine(-camX + camSX, sy, cols * TILE - camX + camSX, sy);
         }
 
         g2.setColor(oldC);
