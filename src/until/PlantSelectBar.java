@@ -45,8 +45,8 @@ public class PlantSelectBar extends JPanel {
     private int selectedIndex = -1;
 
     public PlantSelectBar() {
-        setOpaque(true);
-        setBackground(new Color(0, 0, 0, 120));
+        setOpaque(false);
+        setDoubleBuffered(true);
         setSize(W, H);
 
         setFocusable(false);
@@ -147,8 +147,11 @@ public class PlantSelectBar extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
+        Graphics2D g2 = (Graphics2D) g.create();
+
+        g2.setColor(new Color(0, 0, 0, 120));
+        g2.fillRect(0, 0, getWidth(), getHeight());
+
 
         for (int i = 0; i < items.size(); i++) {
             int x = GAP + i * (ICON + GAP);
@@ -173,6 +176,8 @@ public class PlantSelectBar extends JPanel {
                 g2.drawRect(x - 2, y - 2, ICON + 4, ICON + 4);
             }
         }
+
+        g2.dispose();
     }
 
     public void setListener(Listener listener) {

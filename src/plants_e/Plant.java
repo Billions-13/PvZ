@@ -21,6 +21,7 @@ public abstract class Plant {
     //: trạng thái Plant (state machine đơn giản)
     private PlantState state = PlantState.SPAWNING;
     //private GameWorld gameWorld;
+    private boolean attackEnabled = true;
 
 
     // =============== CONSTRUCTOR ===============
@@ -170,6 +171,9 @@ public abstract class Plant {
         this.state = state;
     }
 
+    public void setAttackEnabled(boolean enabled) {
+        this.attackEnabled = enabled;
+    }
 
     // =============== CONVENIENCE ===============
 
@@ -194,6 +198,7 @@ public abstract class Plant {
     /** Kiểm tra plant có đủ điều kiện để hành động (tấn công) không. */
     protected boolean canAct(double currentTime) {
         if (!isAlive) return false;
+        if (!attackEnabled) return false;
         if (state == PlantState.DEAD || state == PlantState.DYING) return false;
         double elapsed = currentTime - getLastActTime();
         return elapsed >= getAttackSpeed();

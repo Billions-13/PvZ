@@ -32,24 +32,27 @@ public class SunView {
         label.setSize(size, size);
 
 
-        updatePosition();
+        label.setLocation(0, 0);
+
     }
 
     /** Cập nhật vị trí JLabel dựa trên toạ độ Sun. */
-    private void updatePosition() {
-        int x = (int) Math.round(sun.getX());
-        int y = (int) Math.round(sun.getY());
-        label.setLocation(x, y);
+    private void updatePosition(int camX, int camY, int camSX, int camSY) {
+        int sx = (int) Math.round(sun.getX() - camX + camSX);
+        int sy = (int) Math.round(sun.getY() - camY + camSY);
+        label.setLocation(sx, sy);
     }
+
 
     /**
      * Gọi mỗi frame:
      *  - Cập nhật vị trí theo Sun.update(...).
      *  - Sau này nếu sun đã được collect, panel sẽ remove JLabel tương ứng.
      */
-    public void render() {
-        updatePosition();
+    public void render(int camX, int camY, int camSX, int camSY) {
+        updatePosition(camX, camY, camSX, camSY);
     }
+
 
     public JLabel getLabel() {
         return label;

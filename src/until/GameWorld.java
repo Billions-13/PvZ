@@ -21,6 +21,8 @@ public class GameWorld implements ProjectileWorld {
 
     private int wave = 1;
     private int zombiesKilled;
+    private double gardenerHitTimer;
+
     private boolean win;
     private boolean lose;
 
@@ -79,9 +81,26 @@ public class GameWorld implements ProjectileWorld {
         gameTime += dt;
 
         double now = System.nanoTime() / 1e9;
+        final int tile = 80;
+        double fireLineX = 12 * tile;
 
         for (Plant p : plants) {
+
+            if (p instanceof PeaShooter || p instanceof Snowpea) {
+                boolean ok = false;
+                for (Zombie z : zombies) {
+                    if (z.isAlive() && z.getRow() == p.getRow() && z.getX() <= fireLineX) {
+                        ok = true;
+                        break;
+                    }
+                }
+                p.setAttackEnabled(ok);
+            } else {
+                p.setAttackEnabled(true);
+            }
+
             p.update(now);
+
             if (p instanceof Sunflower s) {
                 SunProductionBehavior b = s.getSunProductionBehavior();
                 if (b != null) b.updateSunProduction(s, now, this);
@@ -89,10 +108,16 @@ public class GameWorld implements ProjectileWorld {
         }
 
 
+
         Iterator<Sun> sit = suns.iterator();
         while (sit.hasNext()) {
             Sun s = sit.next();
             s.update(dt);
+            if (s.getY() > 7 * tile) {
+                sit.remove();
+                continue;
+            }
+
             if (s.isCollected()) {
                 addSunPoints(s.getValue());
                 sit.remove();
@@ -106,7 +131,6 @@ public class GameWorld implements ProjectileWorld {
 
                 int cols = 11;
                 int rows = 7;
-                int tile = 80;
 
                 int col = (int) (Math.random() * cols);
                 int row = (int) (Math.random() * rows);
@@ -147,14 +171,21 @@ public class GameWorld implements ProjectileWorld {
             }
 
             if (gardener != null && z.isAlive()) {
-                if (Math.abs(z.getX() - gardener.getX()) < 30 &&
-                        Math.abs(z.getY() - gardener.getY()) < 30) {
-                    gardener.takeDamage(z.getDamage());
-                    if (gardener.isDead()) lose = true;
+                boolean touching = Math.abs(z.getX() - gardener.getX()) < 30 &&
+                        Math.abs(z.getY() - gardener.getY()) < 30;
+
+                if (touching) {
+                    gardenerHitTimer += dt;
+                    if (gardenerHitTimer >= 0.5) {
+                        gardenerHitTimer = 0;
+                        gardener.takeDamage(5);
+                        if (gardener.isDead()) lose = true;
+                    }
                 }
             }
 
-            if (z.getX() < 0) lose = true;
+            if (z.getX() <= 2 * tile) lose = true;
+
 
             if (z.isDead()) {
                 zombiesKilled++;

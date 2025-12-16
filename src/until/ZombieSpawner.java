@@ -50,7 +50,7 @@ public class ZombieSpawner {
 
         int row = spawned % 5;
         double y = 120 + row * 80;
-        double x = 1200;
+        double x = 14 * 80.0;
 
         ZombieType type = switch (world.getWave()) {
             case 1 -> ZombieType.NORMAL;

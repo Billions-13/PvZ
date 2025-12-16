@@ -3,24 +3,39 @@ package Zombies;
 import javax.swing.*;
 import java.util.Objects;
 
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
+
 public class ZombieView {
 
     private final Zombie zombie;
     private final JLabel label;
 
+    private static final int ZW = 80;
+    private static final int ZH = 80;
+    private final Map<String, ImageIcon> cache = new HashMap<>();
+
+
     public ZombieView(Zombie zombie) {
         this.zombie = zombie;
 
-        ImageIcon icon = new ImageIcon(
-                Objects.requireNonNull(
-                        getClass().getResource(zombie.getAdvanceSprite())
-                )
-        );
-
+        ImageIcon icon = iconOf(zombie.getAdvanceSprite());
         label = new JLabel(icon);
-        label.setSize(icon.getIconWidth(), icon.getIconHeight());
+        label.setSize(ZW, ZH);
+
         updatePosition();
     }
+
+    private ImageIcon iconOf(String spritePath) {
+        return cache.computeIfAbsent(spritePath, p -> {
+            ImageIcon raw = new ImageIcon(Objects.requireNonNull(getClass().getResource(p)));
+            Image scaled = raw.getImage().getScaledInstance(ZW, ZH, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        });
+    }
+
 
     private void updatePosition() {
         int x = (int) zombie.getX();
@@ -37,11 +52,8 @@ public class ZombieView {
             default -> zombie.getAdvanceSprite();
         };
 
-        label.setIcon(new ImageIcon(
-                Objects.requireNonNull(
-                        getClass().getResource(sprite)
-                )
-        ));
+        label.setIcon(iconOf(sprite));
+
     }
 
     public JLabel getLabel() {

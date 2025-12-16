@@ -115,9 +115,10 @@ public class PlantPanel extends JPanel {
         syncZombies();
 
         for (PlantView pv : plantViews) pv.render();
-        for (ProjectileView pv : projectileViews) pv.render();
-        for (SunView sv : sunViews) sv.render();
+        for (ProjectileView pv : projectileViews) pv.render(camX, camY, camSX, camSY);
+        for (SunView sv : sunViews) sv.render(camX, camY, camSX, camSY);
         for (ZombieView zv : zombieViews) zv.render();
+
 
         applyCameraToAllViews();
     }

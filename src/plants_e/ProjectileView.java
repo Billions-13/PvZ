@@ -39,24 +39,28 @@ public class ProjectileView {
         label.setSize(icon.getIconWidth(), icon.getIconHeight());
 
         // Đặt vị trí ban đầu theo x, y của Projectile
-        updatePosition();
+        //updatePosition();
+        label.setLocation(0, 0);
+
     }
 
     /** Cập nhật vị trí JLabel dựa trên toạ độ Projectile. */
-    private void updatePosition() {
-        int x = (int) Math.round(projectile.getX());
-        int y = (int) Math.round(projectile.getY());
-        label.setLocation(x, y);
+    private void updatePosition(int camX, int camY, int camSX, int camSY) {
+        int sx = (int) Math.round(projectile.getX() - camX + camSX);
+        int sy = (int) Math.round(projectile.getY() - camY + camSY);
+        label.setLocation(sx, sy);
     }
+
 
     /**
      * Gọi mỗi frame:
      *  - Cập nhật vị trí theo model.
      *  - Nếu sau này muốn hiệu ứng (ví dụ chớp sáng khi ICE_PEA) thì chỉnh icon ở đây.
      */
-    public void render() {
-        updatePosition();
+    public void render(int camX, int camY, int camSX, int camSY) {
+        updatePosition(camX, camY, camSX, camSY);
     }
+
 
     public JLabel getLabel() {
         return label;
