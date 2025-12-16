@@ -1,3 +1,4 @@
+// plants_e/PlantPanel.java
 package plants_e;
 
 import Tile.Manager;
@@ -13,6 +14,8 @@ import java.util.*;
 
 public class PlantPanel extends JPanel {
 
+    public enum PlayerAnim { AUTO, COLLECT, PLANTING }
+
     private final GameWorld world;
     private final Manager tileManager;
 
@@ -26,7 +29,11 @@ public class PlantPanel extends JPanel {
     private BufferedImage stand;
     private final BufferedImage[] run = new BufferedImage[3];
 
+    private BufferedImage planting;
+    private final BufferedImage[] collect = new BufferedImage[3];
+
     private int runIndex;
+    private int collectIndex;
     private double pixelAcc;
 
     private double lastGX = Double.NaN;
@@ -43,6 +50,9 @@ public class PlantPanel extends JPanel {
     private static final Color GRID_COLOR = new Color(139, 90, 43, 170);
     private static final Stroke GRID_STROKE = new BasicStroke(2.2f);
 
+    private volatile PlayerAnim forcedAnim = PlayerAnim.AUTO;
+    private volatile long forcedUntilNs = 0;
+
     public PlantPanel(GameWorld world, Manager tileManager) {
         this.world = world;
         this.tileManager = tileManager;
@@ -54,9 +64,20 @@ public class PlantPanel extends JPanel {
             run[0] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/run1.png")));
             run[1] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/run2.png")));
             run[2] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/run3.png")));
+
+            collect[0] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect1.png")));
+            collect[1] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect2.png")));
+            collect[2] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect3.png")));
+
+            planting = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/planting.png")));
         } catch (Exception e) {
             throw new RuntimeException("Cannot load player sprites", e);
         }
+    }
+
+    public void setForcedAnim(PlayerAnim anim, long untilNs) {
+        forcedAnim = anim == null ? PlayerAnim.AUTO : anim;
+        forcedUntilNs = untilNs;
     }
 
     public void setCamera(int camX, int camY, int camSX, int camSY) {
@@ -93,13 +114,10 @@ public class PlantPanel extends JPanel {
     }
 
     private void syncPlants() {
-        Set<Plant> aliveInWorld = new HashSet<>(world.getPlants());
-
         Iterator<PlantView> it = plantViews.iterator();
         while (it.hasNext()) {
             PlantView pv = it.next();
-            Plant p = pv.getPlant();
-            if (p == null || !p.isAlive() || !aliveInWorld.contains(p)) {
+            if (!pv.getPlant().isAlive()) {
                 remove(pv.getLabel());
                 it.remove();
             }
@@ -247,18 +265,32 @@ public class PlantPanel extends JPanel {
                 while (pixelAcc >= 20.0) {
                     pixelAcc -= 20.0;
                     runIndex = (runIndex + 1) % 3;
+                    collectIndex = (collectIndex + 1) % 3;
                 }
             }
         }
 
         boolean moving = now < movingUntilNs;
 
+        PlayerAnim anim = forcedAnim;
+        if (anim != PlayerAnim.AUTO && forcedUntilNs > 0 && now >= forcedUntilNs) {
+            forcedAnim = PlayerAnim.AUTO;
+            forcedUntilNs = 0;
+            anim = PlayerAnim.AUTO;
+        }
+
         BufferedImage img;
-        if (moving) img = run[runIndex];
-        else {
-            pixelAcc = 0;
-            runIndex = 0;
-            img = stand;
+        if (anim == PlayerAnim.PLANTING) {
+            img = planting;
+        } else if (anim == PlayerAnim.COLLECT) {
+            img = collect[collectIndex];
+        } else {
+            img = moving ? run[runIndex] : stand;
+            if (!moving) {
+                pixelAcc = 0;
+                runIndex = 0;
+                collectIndex = 0;
+            }
         }
 
         lastGX = gx;
