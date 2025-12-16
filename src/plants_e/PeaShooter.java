@@ -42,7 +42,7 @@ public class PeaShooter extends Plant {
             setState(PlantState.IDLE);
         }
 
-        if (canAct(currentTime)) {
+        if (isTargeting() && canAct(currentTime)) {
             setSpritePath(ATTACK);
             doAttack();
             setLastActTime(currentTime);

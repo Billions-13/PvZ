@@ -48,8 +48,11 @@ public class ZombieSpawner {
         if (timer < interval) return;
         timer = 0;
 
-        int row = spawned % 5;
-        double y = 120 + row * 80;
+        int gridRows = 7;
+        int row = 1 + (spawned % (gridRows - 1));  // chỉ 1..6, không bao giờ 0
+        double y = row * 80;       // hoặc TILE nếu bạn có hằng TILE
+
+
         double x = 14 * 80.0;
 
         ZombieType type = switch (world.getWave()) {

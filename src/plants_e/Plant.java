@@ -22,6 +22,7 @@ public abstract class Plant {
     private PlantState state = PlantState.SPAWNING;
     //private GameWorld gameWorld;
     private boolean attackEnabled = true;
+    private boolean targeting;
 
 
     // =============== CONSTRUCTOR ===============
@@ -89,6 +90,9 @@ public abstract class Plant {
     // state/time
     public boolean isAlive() { return isAlive; }
     public double getLastActTime() { return lastActTime; }
+    public boolean isTargeting() { return targeting; }
+
+    public boolean isAttackEnabled() { return attackEnabled; }
 
 
     // =============== SETTERS ===============
@@ -127,9 +131,10 @@ public abstract class Plant {
         this.specialEffect = specialEffect;
     }
 
-    protected void setSpritePath(String spritePath) {
+    public void setSpritePath(String spritePath) {
         this.spritePath = spritePath;
     }
+
 
     public void setPosition(int row, int col) {
         this.row = row;
@@ -174,6 +179,9 @@ public abstract class Plant {
     public void setAttackEnabled(boolean enabled) {
         this.attackEnabled = enabled;
     }
+
+    public void setTargeting(boolean targeting) { this.targeting = targeting; }
+
 
     // =============== CONVENIENCE ===============
 

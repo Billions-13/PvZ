@@ -41,7 +41,7 @@ public class Snowpea extends Plant {
             setState(PlantState.IDLE);
         }
 
-        if (canAct(currentTime)) {
+        if (isTargeting() && canAct(currentTime)) {
             doAttack();
             setLastActTime(currentTime);
         }

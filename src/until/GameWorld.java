@@ -54,18 +54,21 @@ public class GameWorld implements ProjectileWorld {
         p.onPlaced();
     }
 
-    public boolean removePlantAt(int row, int col) {
+    public int removePlantAt(int row, int col) {
         Iterator<Plant> it = plants.iterator();
         while (it.hasNext()) {
             Plant p = it.next();
             if (p.isAlive() && p.getRow() == row && p.getCol() == col) {
+                int refund = p.getSunCost();
                 p.onRemoved();
                 it.remove();
-                return true;
+                addSunPoints(refund);
+                return refund;
             }
         }
-        return false;
+        return 0;
     }
+
 
     public void addZombie(Zombie z) {
         zombies.add(z);
@@ -84,7 +87,20 @@ public class GameWorld implements ProjectileWorld {
         final int tile = 80;
         double fireLineX = 12 * tile;
 
-        for (Plant p : plants) {
+        Iterator<Plant> pit = plants.iterator();
+        while (pit.hasNext()) {
+            Plant p = pit.next();
+
+            if (!p.isAlive()) {
+                p.onRemoved();
+                pit.remove();
+                continue;
+            }
+
+            Zombie target = findClosestZombieAhead(p.getRow(), p.getPositionX());
+            boolean hasTarget = target != null;
+
+            p.setTargeting(hasTarget);
 
             if (p instanceof PeaShooter || p instanceof Snowpea) {
                 boolean ok = false;
@@ -99,13 +115,28 @@ public class GameWorld implements ProjectileWorld {
                 p.setAttackEnabled(true);
             }
 
+            if (p.getPlantType() == PlantType.CHOMPER) {
+                if (hasTarget && Math.abs(target.getX() - p.getPositionX()) < 70) {
+                    p.setSpritePath("chomper_attack.gif");
+                    target.takeDamage(target.getHp());
+                } else {
+                    p.setSpritePath("CHOMPER.gif");
+                }
+            }
+
             p.update(now);
 
             if (p instanceof Sunflower s) {
                 SunProductionBehavior b = s.getSunProductionBehavior();
                 if (b != null) b.updateSunProduction(s, now, this);
             }
+
+            if (!p.isAlive()) {
+                p.onRemoved();
+                pit.remove();
+            }
         }
+
 
 
 
@@ -132,8 +163,9 @@ public class GameWorld implements ProjectileWorld {
                 int cols = 11;
                 int rows = 7;
 
-                int col = (int) (Math.random() * cols);
-                int row = (int) (Math.random() * rows);
+                int col = 1 + (int) (Math.random() * (cols - 1));
+                int row = 1 + (int) (Math.random() * (rows - 1));
+
 
                 double x = col * (double) tile + tile / 2.0;
                 double targetY = row * (double) tile + tile / 2.0;
@@ -208,6 +240,25 @@ public class GameWorld implements ProjectileWorld {
             }
         }
     }
+
+    private Zombie findClosestZombieAhead(int row, double plantX) {
+        Zombie best = null;
+        double bestDx = Double.MAX_VALUE;
+
+        for (Zombie z : zombies) {
+            if (!z.isAlive()) continue;
+            if (z.getRow() != row) continue;
+            if (z.getX() < plantX) continue;
+
+            double dx = z.getX() - plantX;
+            if (dx < bestDx) {
+                bestDx = dx;
+                best = z;
+            }
+        }
+        return best;
+    }
+
 
     @Override
     public Zombie findFirstZombieInPath(int row, double projectileX) {

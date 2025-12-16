@@ -28,6 +28,12 @@ public class IntervalSunProductionBehavior implements SunProductionBehavior {
         double x = source.getPositionX();
         double y = source.getPositionY() - 40;
 
+
+        if (source.getRow() == 1) {
+            x += 55;
+            y += 35;
+        }
+
         world.addSun(new Sun(x, y, sunAmount, false, y));
         source.setLastActTime(currentTime);
     }

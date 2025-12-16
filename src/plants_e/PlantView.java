@@ -3,12 +3,20 @@ package plants_e;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 
 public class PlantView {
 
     private final Plant plant;
     private final JComponent view;
     private Image img;
+
+    private BufferedImage[] snowIdle;
+    private BufferedImage[] snowAttack;
+    private long animLastMs;
+    private int animIndex;
+
 
     private final int w;
     private final int h;
@@ -45,30 +53,48 @@ public class PlantView {
 
         view.setOpaque(false);
         view.setSize(w, h);
+
+        if (plant.getPlantType() == PlantType.SNOWPEA) {
+            snowIdle = new BufferedImage[] {
+                    loadPng("snowpea1.png"),
+                    loadPng("snowpea2.png"),
+                    loadPng("snowpea3.png")
+            };
+            snowAttack = new BufferedImage[] {
+                    loadPng("SNOWPEA_ATTACK1.png"),
+                    loadPng("SNOWPEA_ATTACK2.png"),
+                    loadPng("snowpea3.png")
+            };
+        }
+
     }
+    private BufferedImage loadPng(String name) {
+        try {
+            return ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_P/" + name)));
+        } catch (Exception e) {
+            return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        }
+    }
+
 
     public void render() {
-        String sp = plant.getSpritePath();
-        if (sp != null && !sp.equals(lastSpritePath)) {
-            lastSpritePath = sp;
-
-            ImageIcon icon = new ImageIcon(Objects.requireNonNull(
-                    getClass().getResource("/resources/img_P/" + sp)
-            ));
-
-            // update image reference
-            // (img đang final trong code bạn => đổi img từ final -> non-final)
-            // 1) đổi: private final Image img;  -> private Image img;
-            img = icon.getImage();
-
-            if (plant.getPlantType() == PlantType.WALNUT) {
-                view.setSize(icon.getIconWidth(), icon.getIconHeight());
-            } else {
-                view.setSize(75, 75);
+        if (plant.getPlantType() == PlantType.SNOWPEA && snowIdle != null) {
+            long now = System.currentTimeMillis();
+            if (now - animLastMs >= 120) {
+                animLastMs = now;
+                animIndex = (animIndex + 1) % 3;
             }
+
+            BufferedImage frame = plant.isTargeting()
+                    ? snowAttack[animIndex]
+                    : snowIdle[animIndex];
+
+            img = frame;
         }
+
         view.repaint();
     }
+
 
 
     public JComponent getLabel() {

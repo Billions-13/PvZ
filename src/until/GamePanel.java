@@ -46,6 +46,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     private final PlantSelectBar selectBar = new PlantSelectBar();
 
+
     private int camX, camY, camSX, camSY;
 
     private Double targetX = null;
@@ -155,6 +156,16 @@ public class GamePanel extends JPanel implements Runnable {
                 int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
                 int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
 
+                if (col == 0) {
+                    hud.showMessage("YOU CAN'T PLANT HERE", 2.5);
+                    pickedType = null;
+                    selectBar.clearSelection();
+                    return;
+                }
+
+
+
+
                 double worldPX = col * (double) tile;
                 double worldPY = row * (double) tile;
 
@@ -170,6 +181,10 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if (pickedType != null) {
+
+                    hud.showMessage("YOU CAN'T PLANT HERE", 2.5);
+
+
                     pending = new PendingPlace(pickedType, row, col, worldPX, worldPY, centerX, centerY);
                     targetX = centerX;
                     targetY = centerY;
@@ -178,6 +193,7 @@ public class GamePanel extends JPanel implements Runnable {
                     selectBar.clearSelection();
                     return;
                 }
+
 
                 targetX = centerX;
                 targetY = centerY;
@@ -197,6 +213,8 @@ public class GamePanel extends JPanel implements Runnable {
             return normalCursor;
         }
     }
+
+
 
     @Override
     public void addNotify() {
@@ -252,6 +270,8 @@ public class GamePanel extends JPanel implements Runnable {
                 setCursor(normalCursor);
                 selectBar.clearSelection();
             }
+
+
         }
 
         if (pending != null) {
