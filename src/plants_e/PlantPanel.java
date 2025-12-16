@@ -32,13 +32,6 @@ public class PlantPanel extends JPanel {
     private BufferedImage planting;
     private final BufferedImage[] collect = new BufferedImage[3];
 
-    private BufferedImage h1;
-    private BufferedImage h2;
-    private BufferedImage h3;
-    private BufferedImage h4;
-
-
-
     private int runIndex;
     private int collectIndex;
     private double pixelAcc;
@@ -77,12 +70,6 @@ public class PlantPanel extends JPanel {
             collect[2] = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/collect3.png")));
 
             planting = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/planting.png")));
-            h1 = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/h1.png")));
-            h2 = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/h2.png")));
-            h3 = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/h3.png")));
-            h4 = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/img_W/h4.png")));
-
-
         } catch (Exception e) {
             throw new RuntimeException("Cannot load player sprites", e);
         }
@@ -276,7 +263,6 @@ public class PlantPanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
 
         if (tileManager != null) tileManager.draw(g2, camX, camY, camSX, camSY);
-        drawHouses(g2);
         if (DRAW_GRID) drawGrid(g2);
 
         if (world == null || world.getGardener() == null) return;
@@ -366,30 +352,4 @@ public class PlantPanel extends JPanel {
         g2.setColor(oldC);
         g2.setStroke(oldS);
     }
-
-    private void drawHouses(Graphics2D g2) {
-        if (h1 == null || h2 == null || h3 == null || h4 == null) return;
-
-        BufferedImage[] seq = { h1, h2, h3, h4, h2, h3, h1 };
-
-        int col = 0;
-        int worldX = col * TILE;
-
-        for (int i = 0; i < 7; i++) {
-            int row = i + 1;
-            int worldY = row * TILE;
-
-            int sx = (int) Math.round(worldX - camX + camSX);
-            int sy = (int) Math.round(worldY - camY + camSY);
-            int W = (int) Math.round(TILE * 100.25);
-            int H = (int) Math.round(TILE * 100.25);
-            int ox = (TILE - W) / 2;
-            int oy = (TILE - H) / 2;
-
-            g2.drawImage(seq[i], sx, sy, TILE, TILE, null);
-        }
-    }
-
-
-
 }

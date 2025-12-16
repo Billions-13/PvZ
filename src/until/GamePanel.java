@@ -45,7 +45,8 @@ public class GamePanel extends JPanel implements Runnable {
     private final GardenerLayer gardenerLayer = new GardenerLayer(gardener, 900, 560);
 
     private final PlantSelectBar selectBar = new PlantSelectBar();
-
+    private String errorText;
+    private double errorTextTimer;
 
     private int camX, camY, camSX, camSY;
 
@@ -156,16 +157,6 @@ public class GamePanel extends JPanel implements Runnable {
                 int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
                 int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
 
-                if (col == 0) {
-                    hud.showMessage("YOU CAN'T PLANT HERE", 2.5);
-                    pickedType = null;
-                    selectBar.clearSelection();
-                    return;
-                }
-
-
-
-
                 double worldPX = col * (double) tile;
                 double worldPY = row * (double) tile;
 
@@ -182,8 +173,12 @@ public class GamePanel extends JPanel implements Runnable {
 
                 if (pickedType != null) {
 
-                    hud.showMessage("YOU CAN'T PLANT HERE", 2.5);
-
+                    if (col == 0) {
+                        showError("You cannot plant here");
+                        pickedType = null;
+                        selectBar.clearSelection();
+                        return;
+                    }
 
                     pending = new PendingPlace(pickedType, row, col, worldPX, worldPY, centerX, centerY);
                     targetX = centerX;
@@ -214,6 +209,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    private void showError(String msg) {
+        errorText = msg;
+        errorTextTimer = 2.5;
+    }
 
 
     @Override
