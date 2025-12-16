@@ -97,6 +97,9 @@ public class GamePanel extends JPanel implements Runnable {
         selectBar.setBounds(10, 40 + 10, PlantSelectBar.W, PlantSelectBar.H);
         add(selectBar);
         setComponentZOrder(selectBar, 0);
+        setComponentZOrder(hud, 0);
+
+        setComponentZOrder(selectBar, 0);
 
         normalCursor = Cursor.getDefaultCursor();
         digCursor = buildCursor("/resources/img_P/dig.png", 0, 0);

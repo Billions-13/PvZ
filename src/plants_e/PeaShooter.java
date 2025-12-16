@@ -6,7 +6,8 @@ public class PeaShooter extends Plant {
     private static final double speed = 1.2;
     private static final double cooldown = 7.5;
     private static final int default_sunCost = 100;
-    private static final String default_spritePath = "PEASHOOTER.gif";
+    private static final String IDLE = "PEASHOOTER.gif";
+    private static final String ATTACK = "PEASHOOTER_ATTACK.gif";
 
     public PeaShooter(int row, int col, double positionX, double positionY) {
         super("PeaShooter",
@@ -23,7 +24,7 @@ public class PeaShooter extends Plant {
                 PlantType.PEASHOOTER,
                 0.0,
                 EffectType.NONE,
-                default_spritePath,
+                IDLE,
                 null   // AttackHandler + AttackBehavior sẽ gán trong PlantFactory
         );
     }
@@ -42,10 +43,15 @@ public class PeaShooter extends Plant {
         }
 
         if (canAct(currentTime)) {
+            setSpritePath(ATTACK);
             doAttack();
             setLastActTime(currentTime);
+        } else {
+            setSpritePath(IDLE);
         }
+
     }
+
 
     @Override
     public void onRemoved() {

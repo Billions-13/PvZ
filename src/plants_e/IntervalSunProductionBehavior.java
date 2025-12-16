@@ -16,8 +16,14 @@ public class IntervalSunProductionBehavior implements SunProductionBehavior {
     public void updateSunProduction(Sunflower source, double currentTime, GameWorld world) {
         if (source == null || !source.isAlive() || world == null) return;
 
+        if (source.getLastActTime() == 0.0) {
+            source.setLastActTime(currentTime);
+            return;
+        }
+
         double elapsed = currentTime - source.getLastActTime();
         if (elapsed < produceInterval) return;
+
 
         double x = source.getPositionX();
         double y = source.getPositionY() - 40;

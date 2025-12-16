@@ -26,15 +26,15 @@ public class SunView {
                 )
         );
 
-        int size = 32;
-        Image scaled = icon.getImage().getScaledInstance(size, size, java.awt.Image.SCALE_SMOOTH);
+        int W = 52;
+        int H = 52;
+
+        Image scaled = icon.getImage().getScaledInstance(W, H, Image.SCALE_SMOOTH);
         label = new JLabel(new ImageIcon(scaled));
-        label.setSize(size, size);
-
-
+        label.setSize(W, H);
         label.setLocation(0, 0);
-
     }
+
 
     /** Cập nhật vị trí JLabel dựa trên toạ độ Sun. */
     private void updatePosition(int camX, int camY, int camSX, int camSY) {
