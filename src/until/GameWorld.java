@@ -12,6 +12,8 @@ public class GameWorld implements ProjectileWorld {
     private final List<Zombie> zombies = new ArrayList<>();
     private final List<Projectile> projectiles = new ArrayList<>();
     private final List<Sun> suns = new ArrayList<>();
+    private int sunPoints = 150;
+
 
     private final GameAttackHandler attackHandler;
     private ZombieSpawner spawner;
@@ -21,6 +23,11 @@ public class GameWorld implements ProjectileWorld {
     private int zombiesKilled;
     private boolean win;
     private boolean lose;
+
+    private double gameTime;
+    private double skySunTimer;
+    private double skySunInterval = 6.0;
+
 
 
     public GameWorld(GameAttackHandler attackHandler) {
@@ -69,6 +76,7 @@ public class GameWorld implements ProjectileWorld {
     public void update(double dt) {
 
         if (win || lose) return;
+        gameTime += dt;
 
         double now = System.nanoTime() / 1e9;
 
@@ -79,6 +87,40 @@ public class GameWorld implements ProjectileWorld {
                 if (b != null) b.updateSunProduction(s, now, this);
             }
         }
+
+
+        Iterator<Sun> sit = suns.iterator();
+        while (sit.hasNext()) {
+            Sun s = sit.next();
+            s.update(dt);
+            if (s.isCollected()) {
+                addSunPoints(s.getValue());
+                sit.remove();
+            }
+        }
+
+        if (gameTime >= 5.0) {
+            skySunTimer += dt;
+            if (skySunTimer >= skySunInterval) {
+                skySunTimer = 0;
+
+                int cols = 11;
+                int rows = 7;
+                int tile = 80;
+
+                int col = (int) (Math.random() * cols);
+                int row = (int) (Math.random() * rows);
+
+                double x = col * (double) tile + tile / 2.0;
+                double targetY = row * (double) tile + tile / 2.0;
+                double y = targetY - 220;
+
+                suns.add(new Sun(x, y, 50, true, targetY));
+            }
+        }
+
+        //Iterator<Zombie> zit = zombies.iterator();
+
 
         Iterator<Zombie> zit = zombies.iterator();
         while (zit.hasNext()) {
@@ -160,4 +202,15 @@ public class GameWorld implements ProjectileWorld {
     public List<Projectile> getProjectiles() { return attackHandler.getProjectilesSnapshot(); }
     public List<Sun> getSuns() { return suns; }
     public List<Zombie> getZombies() {return zombies;}
+
+
+    public int getSunPoints() { return sunPoints; }
+    public void addSunPoints(int v) { if (v > 0) sunPoints += v; }
+    public boolean spendSun(int v) {
+        if (v <= 0) return true;
+        if (sunPoints < v) return false;
+        sunPoints -= v;
+        return true;
+    }
+
 }

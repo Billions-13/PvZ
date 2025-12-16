@@ -47,9 +47,10 @@ public class PlantFactory {
         } else if (type == PlantType.SUNFLOWER) {
             Sunflower s = new Sunflower(
                     row, col, positionX, positionY,
-                    new IntervalSunProductionBehavior(24.0, 25)
+                    new IntervalSunProductionBehavior(10.0, 50)
             );
             plant = s;
+
 
         } else if (type == PlantType.WALNUT) {
             plant = new Walnut(row, col, positionX, positionY);

@@ -9,11 +9,19 @@ public class Main {
         frame.setSize(900, 600);
 
         GamePanel panel = new GamePanel();
-        frame.setContentPane(panel);
+
+        IntroPanel intro = new IntroPanel();
+
+        frame.setContentPane(intro);
+
+        intro.setListener(() -> {
+            frame.setContentPane(panel);
+            frame.revalidate();
+            panel.start();
+        });
 
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-        panel.start();
     }
 }

@@ -111,11 +111,25 @@ public class GamePanel extends JPanel implements Runnable {
                 setCursor(digCursor);
                 plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
             } else {
-                digMode = false;
-                pickedType = type;
-                setCursor(normalCursor);
+            int cost = selectBar.getCost(type);
+
+            if (!selectBar.canPick(type)) {
+                hud.showMessage("Cooling down", 2.5);
+                selectBar.clearSelection();
+                return;
             }
-        });
+
+            if (world.getSunPoints() < cost) {
+                hud.showMessage("Not enough sun", 2.5);
+                selectBar.clearSelection();
+                return;
+            }
+
+            digMode = false;
+            pickedType = type;
+            setCursor(normalCursor);
+        }});
+
 
         plantPanel.addMouseListener(new MouseAdapter() {
             @Override
@@ -124,6 +138,14 @@ public class GamePanel extends JPanel implements Runnable {
                 int gx = e.getX() + plantPanel.getX();
                 int gy = e.getY() + plantPanel.getY();
                 if (selectBar.getBounds().contains(gx, gy)) return;
+
+                Sun hitSun = plantPanel.pickSunAt(e.getX(), e.getY());
+                if (hitSun != null && !hitSun.isCollected() && !hitSun.isCollecting()) {
+                    hitSun.startCollect();
+                    plantPanel.setForcedAnim(PlantPanel.PlayerAnim.COLLECT, System.nanoTime() + 300_000_000L);
+                    return;
+                }
+
 
                 int tile = block * 2;
 
@@ -208,6 +230,9 @@ public class GamePanel extends JPanel implements Runnable {
 
     private void update(double dt) {
 
+        selectBar.tick(dt);
+
+
         boolean keyboardMoving = key.upPressed || key.downPressed || key.leftPressed || key.rightPressed;
 
         if (keyboardMoving) {
@@ -262,11 +287,22 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             } else {
                 if (nowNs >= pending.plantingUntilNs) {
+                    int cost = selectBar.getCost(pending.type);
+                    if (!world.spendSun(cost)) {
+                        hud.showMessage("Not enough sun", 2.5);
+                        pending = null;
+                        plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
+                        return;
+                    }
+
                     Plant p = plantFactory.createPlant(pending.type, pending.row, pending.col, pending.worldPX, pending.worldPY);
                     world.addPlant(p);
 
+                    selectBar.startCooldown(pending.type);
+
                     pending = null;
                     plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
+
                 }
             }
         } else if (targetX != null && targetY != null && !keyboardMoving) {

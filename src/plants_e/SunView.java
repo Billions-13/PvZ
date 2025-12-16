@@ -1,6 +1,7 @@
 package plants_e;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import java.awt.*;
 import java.util.Objects;
 
 /**
@@ -25,8 +26,11 @@ public class SunView {
                 )
         );
 
-        label = new JLabel(icon);
-        label.setSize(icon.getIconWidth(), icon.getIconHeight());
+        int size = 32;
+        Image scaled = icon.getImage().getScaledInstance(size, size, java.awt.Image.SCALE_SMOOTH);
+        label = new JLabel(new ImageIcon(scaled));
+        label.setSize(size, size);
+
 
         updatePosition();
     }

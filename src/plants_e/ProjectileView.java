@@ -23,7 +23,7 @@ public class ProjectileView {
         String spritePath;
         if (projectile.getType() == ProjectileType.ICE_PEA) {
             // Đạn của Snowpea (làm chậm) – khác sprite
-            spritePath = "projectile_of_snow.png";
+            spritePath = "projectile_snowpea.webp";
         } else {
             // Đạn thường của Peashooter
             spritePath = "PROJECTILE.png";

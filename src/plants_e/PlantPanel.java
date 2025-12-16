@@ -99,6 +99,15 @@ public class PlantPanel extends JPanel {
         return worldY / TILE;
     }
 
+    public Sun pickSunAt(int x, int y) {
+        for (int i = sunViews.size() - 1; i >= 0; i--) {
+            JLabel c = sunViews.get(i).getLabel();
+            if (c.getBounds().contains(x, y)) return sunViews.get(i).getSun();
+        }
+        return null;
+    }
+
+
     public void render() {
         syncPlants();
         syncProjectiles();
