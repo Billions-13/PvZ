@@ -45,8 +45,6 @@ public class GamePanel extends JPanel implements Runnable {
     private final GardenerLayer gardenerLayer = new GardenerLayer(gardener, 900, 560);
 
     private final PlantSelectBar selectBar = new PlantSelectBar();
-    private String errorText;
-    private double errorTextTimer;
 
     private int camX, camY, camSX, camSY;
 
@@ -98,9 +96,6 @@ public class GamePanel extends JPanel implements Runnable {
 
         selectBar.setBounds(10, 40 + 10, PlantSelectBar.W, PlantSelectBar.H);
         add(selectBar);
-        setComponentZOrder(selectBar, 0);
-        setComponentZOrder(hud, 0);
-
         setComponentZOrder(selectBar, 0);
 
         normalCursor = Cursor.getDefaultCursor();
@@ -172,14 +167,6 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if (pickedType != null) {
-
-                    if (col == 0) {
-                        showError("You cannot plant here");
-                        pickedType = null;
-                        selectBar.clearSelection();
-                        return;
-                    }
-
                     pending = new PendingPlace(pickedType, row, col, worldPX, worldPY, centerX, centerY);
                     targetX = centerX;
                     targetY = centerY;
@@ -188,7 +175,6 @@ public class GamePanel extends JPanel implements Runnable {
                     selectBar.clearSelection();
                     return;
                 }
-
 
                 targetX = centerX;
                 targetY = centerY;
@@ -208,12 +194,6 @@ public class GamePanel extends JPanel implements Runnable {
             return normalCursor;
         }
     }
-
-    private void showError(String msg) {
-        errorText = msg;
-        errorTextTimer = 2.5;
-    }
-
 
     @Override
     public void addNotify() {
@@ -269,8 +249,6 @@ public class GamePanel extends JPanel implements Runnable {
                 setCursor(normalCursor);
                 selectBar.clearSelection();
             }
-
-
         }
 
         if (pending != null) {
