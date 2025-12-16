@@ -22,6 +22,7 @@ public class GameWorld implements ProjectileWorld {
     private boolean win;
     private boolean lose;
 
+
     public GameWorld(GameAttackHandler attackHandler) {
         this.attackHandler = attackHandler;
     }
@@ -66,6 +67,7 @@ public class GameWorld implements ProjectileWorld {
     }
 
     public void update(double dt) {
+
         if (win || lose) return;
 
         double now = System.nanoTime() / 1e9;
