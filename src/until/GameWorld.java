@@ -45,11 +45,12 @@ public class GameWorld implements ProjectileWorld {
     }
 
     public boolean removePlantAt(int row, int col) {
-        for (int i = 0; i < plants.size(); i++) {
-            Plant p = plants.get(i);
-            if (p != null && p.isAlive() && p.getRow() == row && p.getCol() == col) {
-                plants.remove(i);
+        Iterator<Plant> it = plants.iterator();
+        while (it.hasNext()) {
+            Plant p = it.next();
+            if (p.isAlive() && p.getRow() == row && p.getCol() == col) {
                 p.onRemoved();
+                it.remove();
                 return true;
             }
         }

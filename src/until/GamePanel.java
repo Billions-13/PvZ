@@ -239,7 +239,7 @@ public class GamePanel extends JPanel implements Runnable {
                     targetY = null;
 
                     pending.planting = true;
-                    pending.plantingUntilNs = nowNs + 1_000_000_000L;
+                    pending.plantingUntilNs = nowNs + 200_000_000L;
 
                     plantPanel.setForcedAnim(PlantPanel.PlayerAnim.PLANTING, pending.plantingUntilNs);
                 } else {

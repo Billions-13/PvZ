@@ -113,13 +113,20 @@ public class PlantPanel extends JPanel {
         applyCameraToAllViews();
     }
 
+
     private void syncPlants() {
+        Set<Plant> aliveInWorld = new HashSet<>(world.getPlants());
+
+        boolean changed = false;
+
         Iterator<PlantView> it = plantViews.iterator();
         while (it.hasNext()) {
             PlantView pv = it.next();
-            if (!pv.getPlant().isAlive()) {
+            Plant p = pv.getPlant();
+            if (!p.isAlive() || !aliveInWorld.contains(p)) {
                 remove(pv.getLabel());
                 it.remove();
+                changed = true;
             }
         }
 
@@ -130,9 +137,16 @@ public class PlantPanel extends JPanel {
                 PlantView pv = new PlantView(p);
                 plantViews.add(pv);
                 add(pv.getLabel());
+                changed = true;
             }
         }
+
+        if (changed) {
+            revalidate();
+            repaint();
+        }
     }
+
 
     private void syncProjectiles() {
         Iterator<ProjectileView> it = projectileViews.iterator();
