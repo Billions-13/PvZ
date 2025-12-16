@@ -1,4 +1,3 @@
-
 package until;
 
 import Tile.Manager;
@@ -46,6 +45,27 @@ public class GamePanel extends JPanel implements Runnable {
     private Double targetY = null;
     private static final double CLICK_MOVE_SPEED = 220.0;
 
+    // ===== [NEW] pending placement: click icon -> click tile -> run -> planting 1s -> spawn plant -> reset =====
+    private static final class PendingPlant {
+        final PlantType type;
+        final int row;
+        final int col;
+        final double px;
+        final double py;
+        boolean plantingStarted;
+        double plantingLeft;
+
+        PendingPlant(PlantType type, int row, int col, double px, double py) {
+            this.type = type;
+            this.row = row;
+            this.col = col;
+            this.px = px;
+            this.py = py;
+        }
+    }
+
+    private PendingPlant pending = null;
+
     public GamePanel() {
         setLayout(null);
         setFocusable(true);
@@ -69,7 +89,6 @@ public class GamePanel extends JPanel implements Runnable {
 
         selectBar.setListener(type -> pickedType = type);
 
-
         plantPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -78,25 +97,30 @@ public class GamePanel extends JPanel implements Runnable {
                 int gy = e.getY() + plantPanel.getY();
                 if (selectBar.getBounds().contains(gx, gy)) return;
 
-                int worldX = camX - camSX + e.getX();
-                int worldY = camY - camSY + e.getY();
-
                 int tile = block * 2;
+
                 int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
                 int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
+
                 double px = col * tile;
                 double py = row * tile;
 
+                // ===== [NEW] nếu đã chọn plant -> tạo pending + bắt player chạy tới ô bằng collect anim =====
                 if (pickedType != null) {
-                    plantInput.plant(pickedType, row, col, px, py);
+                    pending = new PendingPlant(pickedType, row, col, px, py);
+
+                    targetX = col * tile + tile / 2.0;
+                    targetY = row * tile + tile / 2.0;
+
+                    plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.COLLECT);
                     return;
                 }
 
+                // ===== click move bình thường =====
                 targetX = col * tile + tile / 2.0;
                 targetY = row * tile + tile / 2.0;
             }
         });
-
     }
 
     @Override
@@ -137,34 +161,63 @@ public class GamePanel extends JPanel implements Runnable {
         if (keyboardMoving) {
             targetX = null;
             targetY = null;
+
+            // nếu đang pending mà bạn bấm WASD thì coi như hủy chạy theo click (không spawn cây)
+            if (pending != null && !pending.plantingStarted) {
+                pending = null;
+                plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.AUTO);
+            }
         }
 
-        if (targetX != null && targetY != null && !keyboardMoving) {
-            double dx = targetX - gardener.getX();
-            double dy = targetY - gardener.getY();
-            double dist = Math.hypot(dx, dy);
+        // ===== [NEW] đang planting thì khóa movement 1s =====
+        if (pending != null && pending.plantingStarted) {
+            pending.plantingLeft -= dt;
+            if (pending.plantingLeft <= 0) {
+                plantInput.plant(pending.type, pending.row, pending.col, pending.px, pending.py);
 
-            if (dist < 2.0) {
-                targetX = null;
-                targetY = null;
-            } else {
-                double vx = dx / dist * CLICK_MOVE_SPEED;
-                double vy = dy / dist * CLICK_MOVE_SPEED;
+                pending = null;
+                pickedType = null;
 
-                double nx = gardener.getX() + vx * dt;
-                double ny = gardener.getY() + vy * dt;
-
-                int worldW = maxcol * block * 2;
-                int worldH = maxrow * block * 2;
-
-                nx = Math.max(0, Math.min(nx, worldW));
-                ny = Math.max(0, Math.min(ny, worldH));
-
-                gardener.setX(nx);
-                gardener.setY(ny);
+                plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.AUTO);
             }
         } else {
-            gardener.update(key, dt, 0, 0, maxcol * block * 2, maxrow * block * 2);
+            // movement bình thường (click-move hoặc WASD)
+            boolean clickMoving = targetX != null && targetY != null && !keyboardMoving;
+
+            if (clickMoving) {
+                double dx = targetX - gardener.getX();
+                double dy = targetY - gardener.getY();
+                double dist = Math.hypot(dx, dy);
+
+                if (dist < 2.0) {
+                    targetX = null;
+                    targetY = null;
+
+                    // ===== [NEW] nếu tới nơi và đang pending -> bắt đầu planting 1s =====
+                    if (pending != null && !pending.plantingStarted) {
+                        pending.plantingStarted = true;
+                        pending.plantingLeft = 1.0;
+                        plantPanel.setPlayerAnimMode(PlantPanel.AnimMode.PLANTING);
+                    }
+                } else {
+                    double vx = dx / dist * CLICK_MOVE_SPEED;
+                    double vy = dy / dist * CLICK_MOVE_SPEED;
+
+                    double nx = gardener.getX() + vx * dt;
+                    double ny = gardener.getY() + vy * dt;
+
+                    int worldW = maxcol * block * 2;
+                    int worldH = maxrow * block * 2;
+
+                    nx = Math.max(0, Math.min(nx, worldW));
+                    ny = Math.max(0, Math.min(ny, worldH));
+
+                    gardener.setX(nx);
+                    gardener.setY(ny);
+                }
+            } else {
+                gardener.update(key, dt, 0, 0, maxcol * block * 2, maxrow * block * 2);
+            }
         }
 
         camSX = mwidth / 2;
