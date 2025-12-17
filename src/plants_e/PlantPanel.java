@@ -205,7 +205,11 @@ public class PlantPanel extends JPanel {
                 int zx = (int) Math.round(z.getX() - camX + camSX);
                 int zy = (int) Math.round(z.getY() - camY + camSY);
 
-                g2.drawImage(imgZ, zx, zy, 80, 80, this);
+                int ZW = 125;
+                int ZH = 125;
+
+                g2.drawImage(imgZ, zx - (ZW - 80) / 2, zy - (ZH - 80) / 2, ZW, ZH, this);
+                repaint ();
             }
 
 
