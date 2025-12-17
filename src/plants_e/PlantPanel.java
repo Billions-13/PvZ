@@ -10,6 +10,14 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 
+
+import Zombies.Zombie;
+import Zombies.ZombieState;
+import javax.swing.ImageIcon;
+import java.util.HashMap;
+import java.util.Map;
+
+
 public class PlantPanel extends JPanel {
 
     public enum PlayerAnim { AUTO, COLLECT, PLANTING }
@@ -107,6 +115,16 @@ public class PlantPanel extends JPanel {
         repaint();
     }
 
+    private final Map<String, Image> zombieImgCache = new HashMap<>();
+    private Image zombieImg(String path) {
+        return zombieImgCache.computeIfAbsent(path, p -> {
+            var url = getClass().getResource(p);
+            if (url == null) return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+            return new ImageIcon(url).getImage();
+        });
+    }
+
+
     // ===== DRAW GAMEPLAY GRID (7x13) =====
     private void drawGrid(Graphics2D g2) {
         g2.setColor(new Color(150, 70, 60)); // nâu
@@ -152,7 +170,9 @@ public class PlantPanel extends JPanel {
 
         for (ProjectileView pv : sync.getProjectileViews()) place(pv.getLabel(), pv.getProjectile().getX(), pv.getProjectile().getY());
         for (SunView sv : sync.getSunViews()) place(sv.getLabel(), sv.getSun().getX(), sv.getSun().getY());
-        for (ZombieView zv : sync.getZombieViews()) place(zv.getLabel(), zv.getZombie().getX(), zv.getZombie().getY());
+        for (ZombieView zv : sync.getZombieViews()) place(zv.getLabel(),
+                zv.getZombie().getX() * 2,
+                zv.getZombie().getY() * 2);
     }
 
     private void place(JComponent c, double worldX, double worldY) {
@@ -169,6 +189,25 @@ public class PlantPanel extends JPanel {
         if (tileManager != null) {
             tileManager.draw(g2, camX, camY, camSX, camSY);
             drawGrid(g2);
+
+            for (Zombie z : world.getZombies()) {
+                if (z == null) continue;
+
+                String sprite = switch (z.getState()) {
+                    case ATTACK -> z.getAttackSprite();
+                    case HEAD -> z.getHeadSprite();
+                    case DEAD -> z.getDeadSprite();
+                    default -> z.getAdvanceSprite();
+                };
+
+                Image imgZ = zombieImg(sprite);
+
+                int zx = (int) Math.round(z.getX() - camX + camSX);
+                int zy = (int) Math.round(z.getY() - camY + camSY);
+
+                g2.drawImage(imgZ, zx, zy, 80, 80, this);
+            }
+
 
         }
 

@@ -41,13 +41,6 @@ public class Snowpea extends Plant {
             setState(PlantState.IDLE);
         }
 
-        if (isTargeting() && canAct(currentTime)) {
-            setSpritePath("Snowpea_attack.gif");
-            doAttack();
-            setLastActTime(currentTime);
-        } else {
-            setSpritePath("Snowpea_idle.gif");
-        }
 
     }
 

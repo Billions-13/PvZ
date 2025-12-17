@@ -11,6 +11,10 @@ public class ZombieSpawner {
     private int total;
     private double interval;
 
+    private static final int TILE = 80;
+    private static final int GRID_ROWS = 7; // 0..6
+    private static final int SPAWN_SAFE_COL = 3; // tránh thua ngay vì GameWorld lose khi x <= 2*TILE
+
     public ZombieSpawner(GameWorld world) {
         this.world = world;
         setWave(1);
@@ -48,12 +52,12 @@ public class ZombieSpawner {
         if (timer < interval) return;
         timer = 0;
 
-        int gridRows = 7;
-        int row = 1 + (int)(Math.random() * (gridRows - 1));  // chỉ 1..6, không bao giờ 0
-        double y = row * 80.0 + 40.0 ;       // hoặc TILE nếu bạn có hằng TILE
 
+        int row = 1 + (int)(Math.random() * 6); // 1..6
 
-        double x = 11 * 80.0;
+        int spawnCol = 3;
+        double x = spawnCol * TILE * 2;
+        double y = row * TILE * 2;
 
         ZombieType type = switch (world.getWave()) {
             case 1 -> ZombieType.NORMAL;

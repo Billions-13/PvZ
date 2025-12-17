@@ -35,8 +35,8 @@ public class ZombieView {
     }
 
     private void updatePosition(int camX, int camY, int camSX, int camSY) {
-        int sx = (int) Math.round(zombie.getX() - camX + camSX);
-        int sy = (int) Math.round(zombie.getY() - camY + camSY);
+        int sx = (int) Math.round(zombie.getX() * 2 - camX + camSX);
+        int sy = (int) Math.round(zombie.getY() * 2 - camY + camSY);
         label.setLocation(sx, sy);
     }
 
