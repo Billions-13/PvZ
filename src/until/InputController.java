@@ -96,6 +96,14 @@ public final class InputController {
                 int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
                 int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
 
+                if (!GridRules.canPlacePlant(row, col)) {
+                    hud.showMessage("Cannot place", 2.5);
+                    selectBar.clearSelection();
+                    planting.exitDigMode();
+                    return;
+                }
+
+
                 double worldPX = col * (double) tile;
                 double worldPY = row * (double) tile;
 
