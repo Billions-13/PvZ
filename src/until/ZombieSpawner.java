@@ -50,10 +50,10 @@ public class ZombieSpawner {
 
         int gridRows = 7;
         int row = 1 + (int)(Math.random() * (gridRows - 1));  // chỉ 1..6, không bao giờ 0
-        double y = row * 80;       // hoặc TILE nếu bạn có hằng TILE
+        double y = row * 80.0 + 40.0 ;       // hoặc TILE nếu bạn có hằng TILE
 
 
-        double x = 14 * 80.0;
+        double x = 11 * 80.0;
 
         ZombieType type = switch (world.getWave()) {
             case 1 -> ZombieType.NORMAL;

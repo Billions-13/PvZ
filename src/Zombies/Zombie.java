@@ -1,4 +1,3 @@
-// Zombies/Zombie.java
 package Zombies;
 
 public abstract class Zombie {
@@ -10,8 +9,10 @@ public abstract class Zombie {
     protected final int damage;
     protected final double baseSpeed;
     protected double speed;
+
     protected boolean dead;
     protected ZombieState state = ZombieState.ADVANCE;
+
     protected double slowRemaining;
 
     protected String normalAdvanceSprite;
@@ -20,8 +21,12 @@ public abstract class Zombie {
     protected String frozenAttackSprite;
     protected String deadSprite;
     protected String headSprite;
+
     protected double attackTimer;
     protected final double attackInterval = 1.0;
+
+    private double headRemaining;
+    private double deadAnimRemaining;
 
     protected Zombie(int row, double startX, double startY, int hp, int damage, double speed) {
         this.row = row;
@@ -37,6 +42,21 @@ public abstract class Zombie {
 
     public void update(double dt) {
         if (dead || dt <= 0) return;
+
+        if (state == ZombieState.HEAD) {
+            headRemaining -= dt;
+            if (headRemaining <= 0) {
+                state = ZombieState.DEAD;
+                deadAnimRemaining = 0.2;
+            }
+            return;
+        }
+
+        if (state == ZombieState.DEAD) {
+            deadAnimRemaining -= dt;
+            if (deadAnimRemaining <= 0) dead = true;
+            return;
+        }
 
         if (slowRemaining > 0) {
             slowRemaining -= dt;
@@ -55,21 +75,35 @@ public abstract class Zombie {
     }
 
     public void setState(ZombieState state) {
-        if (!dead) this.state = state == null ? ZombieState.ADVANCE : state;
+        if (dead) return;
+        if (this.state == ZombieState.HEAD || this.state == ZombieState.DEAD) return;
+        this.state = state == null ? ZombieState.ADVANCE : state;
     }
 
     public void takeDamage(int dmg) {
         if (dead || dmg <= 0) return;
+        if (state == ZombieState.HEAD || state == ZombieState.DEAD) return;
+
         hp -= dmg;
         if (hp <= 0) {
             hp = 0;
-            dead = true;
-            state = ZombieState.DEAD;
+            state = ZombieState.HEAD;
+            headRemaining = 0.2;
+            attackTimer = 0;
         }
+    }
+
+    public void dieInstantly() {
+        if (dead) return;
+        hp = 0;
+        dead = true;
+        state = ZombieState.DEAD;
     }
 
     public void slow(double seconds) {
         if (dead || seconds <= 0) return;
+        if (state == ZombieState.HEAD || state == ZombieState.DEAD) return;
+
         speed = baseSpeed * 0.5;
         if (seconds > slowRemaining) slowRemaining = seconds;
     }
