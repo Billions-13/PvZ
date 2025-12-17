@@ -54,6 +54,15 @@ public class GameWorld implements ProjectileWorld {
         p.onPlaced();
     }
 
+
+    public boolean hasPlantAt(int row, int col) {
+        for (Plant p : plants) {
+            if (p != null && p.isAlive() && p.getRow() == row && p.getCol() == col) return true;
+        }
+        return false;
+    }
+
+
     public int removePlantAt(int row, int col) {
         Iterator<Plant> it = plants.iterator();
         while (it.hasNext()) {

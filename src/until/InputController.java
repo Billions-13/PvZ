@@ -120,10 +120,17 @@ public final class InputController {
 
                 PlantType picked = planting.getPickedType();
                 if (picked != null) {
+
+                    if (world.hasPlantAt(row, col)) {
+                        hud.showMessage("A plant has already been planted", 2.5);
+                        return;
+                    }
+
                     planting.createPending(row, col, worldPX, worldPY, centerX, centerY, mv);
                     selectBar.clearSelection();
                     return;
                 }
+
 
                 mv.setTarget(centerX, centerY);
             }
