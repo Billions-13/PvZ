@@ -1,26 +1,17 @@
 package until;
 
 import Tile.Manager;
-import plants_e.*;
 import entity.Gardener;
+import plants_e.GameAttackHandler;
+import plants_e.PlantFactory;
+import plants_e.PlantPanel;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.util.Objects;
 
-public class GamePanel extends JPanel implements Runnable {
+public class GamePanel extends JPanel {
 
-    private Thread thread;
     private final int fps = 60;
-
-    private PlantType pickedType = null;
-
-    private boolean digMode = false;
-    private Cursor digCursor;
-    private Cursor normalCursor;
+    private final CursorManager cursor;
 
     public final int block = 40;
     public final int maxcol = 45;
@@ -40,45 +31,30 @@ public class GamePanel extends JPanel implements Runnable {
 
     private final Manager tileManager = new Manager(maxcol, maxrow, block, mwidth, mheight);
     private final PlantPanel plantPanel = new PlantPanel(world, tileManager);
+
     private final HudLayer hud = new HudLayer(world, 900, 40);
-
     private final GardenerLayer gardenerLayer = new GardenerLayer(gardener, 900, 560);
-
     private final PlantSelectBar selectBar = new PlantSelectBar();
 
-    private int camX, camY, camSX, camSY;
+    private final MovementController movement = new MovementController();
+    private final PlantingController planting = new PlantingController();
 
-    private Double targetX = null;
-    private Double targetY = null;
-    private static final double CLICK_MOVE_SPEED = 220.0;
-    private static final double ARRIVE_EPS = 2.0;
+    private final CameraController camera = new CameraController(
+            mwidth,
+            mheight,
+            block,
+            maxcol * block * 2,
+            maxrow * block * 2
+    );
 
-    private static final class PendingPlace {
-        final PlantType type;
-        final int row;
-        final int col;
-        final double worldPX;
-        final double worldPY;
-        final double moveTargetX;
-        final double moveTargetY;
-        long plantingUntilNs;
-        boolean planting;
-
-        PendingPlace(PlantType type, int row, int col, double worldPX, double worldPY, double moveTargetX, double moveTargetY) {
-            this.type = type;
-            this.row = row;
-            this.col = col;
-            this.worldPX = worldPX;
-            this.worldPY = worldPY;
-            this.moveTargetX = moveTargetX;
-            this.moveTargetY = moveTargetY;
-        }
-    }
-
-    private PendingPlace pending = null;
+    private final InputController input;
+    private final GameLoop loop;
 
     public GamePanel() {
         setLayout(null);
+
+        cursor = new CursorManager(this);
+
         setFocusable(true);
         addKeyListener(key);
 
@@ -91,108 +67,45 @@ public class GamePanel extends JPanel implements Runnable {
         add(hud);
         add(plantPanel);
 
+        BoardLayer board = new BoardLayer(
+                mwidth,
+                mheight - 40,
+                7,
+                80
+        );
+        board.setBounds(0, 40, mwidth, mheight - 40);
+        add(board);
+        setComponentZOrder(board, getComponentCount() - 1);
+
         gardenerLayer.setBounds(0, 40, 900, 560);
         add(gardenerLayer);
 
-        selectBar.setBounds(10, 40 + 10, PlantSelectBar.W, PlantSelectBar.H);
+        selectBar.setBounds(10, 50, PlantSelectBar.W, PlantSelectBar.H);
         add(selectBar);
         setComponentZOrder(selectBar, 0);
 
-        normalCursor = Cursor.getDefaultCursor();
-        digCursor = buildCursor("/resources/img_P/dig.png", 0, 0);
+        input = new InputController(
+                this,
+                plantPanel,
+                selectBar,
+                hud,
+                world,
+                movement,
+                planting,
+                cursor,
+                maxcol,
+                maxrow,
+                block
+        );
+        input.bind();
 
-        selectBar.setListener(type -> {
-            if (type == null) {
-                digMode = true;
-                pickedType = null;
-                pending = null;
-                targetX = null;
-                targetY = null;
-                setCursor(digCursor);
-                plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
-            } else {
-            int cost = selectBar.getCost(type);
-
-            if (!selectBar.canPick(type)) {
-                hud.showMessage("Cooling down", 2.5);
-                selectBar.clearSelection();
-                return;
-            }
-
-            if (world.getSunPoints() < cost) {
-                hud.showMessage("Not enough sun", 2.5);
-                selectBar.clearSelection();
-                return;
-            }
-
-            digMode = false;
-            pickedType = type;
-            setCursor(normalCursor);
-        }});
-
-
-        plantPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-
-                int gx = e.getX() + plantPanel.getX();
-                int gy = e.getY() + plantPanel.getY();
-                if (selectBar.getBounds().contains(gx, gy)) return;
-
-                Sun hitSun = plantPanel.pickSunAt(e.getX(), e.getY());
-                if (hitSun != null && !hitSun.isCollected() && !hitSun.isCollecting()) {
-                    hitSun.startCollect();
-                    plantPanel.setForcedAnim(PlantPanel.PlayerAnim.COLLECT, System.nanoTime() + 300_000_000L);
-                    return;
-                }
-
-
-                int tile = block * 2;
-
-                int col = Math.max(0, Math.min(maxcol - 1, plantPanel.snapColFromMouse(e.getX())));
-                int row = Math.max(0, Math.min(maxrow - 1, plantPanel.snapRowFromMouse(e.getY())));
-
-                double worldPX = col * (double) tile;
-                double worldPY = row * (double) tile;
-
-                double centerX = col * (double) tile + tile / 2.0;
-                double centerY = row * (double) tile + tile / 2.0;
-
-                if (digMode) {
-                    world.removePlantAt(row, col);
-                    digMode = false;
-                    setCursor(normalCursor);
-                    selectBar.clearSelection();
-                    return;
-                }
-
-                if (pickedType != null) {
-                    pending = new PendingPlace(pickedType, row, col, worldPX, worldPY, centerX, centerY);
-                    targetX = centerX;
-                    targetY = centerY;
-
-                    pickedType = null;
-                    selectBar.clearSelection();
-                    return;
-                }
-
-                targetX = centerX;
-                targetY = centerY;
-            }
+        loop = new GameLoop(fps, () -> {
+            double dt = 1.0 / fps;
+            tick(dt);
+            hud.repaint();
+            plantPanel.render();
+            gardenerLayer.repaint();
         });
-    }
-
-    private Cursor buildCursor(String path, int hotX, int hotY) {
-        try {
-            Image img = new ImageIcon(Objects.requireNonNull(getClass().getResource(path))).getImage();
-            BufferedImage bi = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = bi.createGraphics();
-            g2.drawImage(img, 0, 0, 32, 32, null);
-            g2.dispose();
-            return Toolkit.getDefaultToolkit().createCustomCursor(bi, new Point(hotX, hotY), "dig");
-        } catch (Exception e) {
-            return normalCursor;
-        }
     }
 
     @Override
@@ -202,153 +115,34 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void start() {
-        thread = new Thread(this);
-        thread.start();
+        loop.start();
     }
 
-    @Override
-    public void run() {
-        long last = System.nanoTime();
-        double acc = 0;
-        double step = 1.0 / fps;
-
-        while (thread != null) {
-            long now = System.nanoTime();
-            acc += (now - last) / 1e9;
-            last = now;
-
-            while (acc >= step) {
-                update(step);
-                acc -= step;
-            }
-
-            hud.repaint();
-            plantPanel.render();
-            gardenerLayer.repaint();
-        }
-    }
-
-    private void update(double dt) {
-
+    private void tick(double dt) {
         selectBar.tick(dt);
-
-
-        boolean keyboardMoving = key.upPressed || key.downPressed || key.leftPressed || key.rightPressed;
-
-        if (keyboardMoving) {
-            targetX = null;
-            targetY = null;
-
-            if (pending != null && !pending.planting) {
-                pending = null;
-                plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
-            }
-
-            if (digMode) {
-                digMode = false;
-                setCursor(normalCursor);
-                selectBar.clearSelection();
-            }
-        }
-
-        if (pending != null) {
-            long nowNs = System.nanoTime();
-
-            if (!pending.planting) {
-                double dx = pending.moveTargetX - gardener.getX();
-                double dy = pending.moveTargetY - gardener.getY();
-                double dist = Math.hypot(dx, dy);
-
-                if (dist <= ARRIVE_EPS) {
-                    targetX = null;
-                    targetY = null;
-
-                    pending.planting = true;
-                    pending.plantingUntilNs = nowNs + 200_000_000L;
-
-                    plantPanel.setForcedAnim(PlantPanel.PlayerAnim.PLANTING, pending.plantingUntilNs);
-                } else {
-                    plantPanel.setForcedAnim(PlantPanel.PlayerAnim.COLLECT, 0);
-
-                    double vx = dx / dist * CLICK_MOVE_SPEED;
-                    double vy = dy / dist * CLICK_MOVE_SPEED;
-
-                    double nx = gardener.getX() + vx * dt;
-                    double ny = gardener.getY() + vy * dt;
-
-                    int worldW = maxcol * block * 2;
-                    int worldH = maxrow * block * 2;
-
-                    nx = Math.max(0, Math.min(nx, worldW));
-                    ny = Math.max(0, Math.min(ny, worldH));
-
-                    gardener.setX(nx);
-                    gardener.setY(ny);
-                }
-            } else {
-                if (nowNs >= pending.plantingUntilNs) {
-                    int cost = selectBar.getCost(pending.type);
-                    if (!world.spendSun(cost)) {
-                        hud.showMessage("Not enough sun", 2.5);
-                        pending = null;
-                        plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
-                        return;
-                    }
-
-                    Plant p = plantFactory.createPlant(pending.type, pending.row, pending.col, pending.worldPX, pending.worldPY);
-                    world.addPlant(p);
-
-                    selectBar.startCooldown(pending.type);
-
-                    pending = null;
-                    plantPanel.setForcedAnim(PlantPanel.PlayerAnim.AUTO, 0);
-
-                }
-            }
-        } else if (targetX != null && targetY != null && !keyboardMoving) {
-            double dx = targetX - gardener.getX();
-            double dy = targetY - gardener.getY();
-            double dist = Math.hypot(dx, dy);
-
-            if (dist < 2.0) {
-                targetX = null;
-                targetY = null;
-            } else {
-                double vx = dx / dist * CLICK_MOVE_SPEED;
-                double vy = dy / dist * CLICK_MOVE_SPEED;
-
-                double nx = gardener.getX() + vx * dt;
-                double ny = gardener.getY() + vy * dt;
-
-                int worldW = maxcol * block * 2;
-                int worldH = maxrow * block * 2;
-
-                nx = Math.max(0, Math.min(nx, worldW));
-                ny = Math.max(0, Math.min(ny, worldH));
-
-                gardener.setX(nx);
-                gardener.setY(ny);
-            }
-        } else {
-            gardener.update(key, dt, 0, 0, maxcol * block * 2, maxrow * block * 2);
-        }
-
-        camSX = mwidth / 2;
-        camSY = (mheight - 40) / 2;
 
         int worldW = maxcol * block * 2;
         int worldH = maxrow * block * 2;
 
-        camX = (int) gardener.getX();
-        camY = (int) gardener.getY();
+        long nowNs = System.nanoTime();
 
-        camX = Math.max(camSX, Math.min(camX, worldW - (mwidth - camSX)));
-        camY = Math.max(camSY, Math.min(camY, worldH - ((mheight - 40) - camSY)));
+        if (planting.hasPending()) {
+            planting.update(
+                    dt, nowNs,
+                    gardener, movement,
+                    plantPanel, selectBar,
+                    world, plantFactory, hud,
+                    0, 0, worldW, worldH
+            );
+        } else {
+            gardener.update(key, dt, 0, 0, worldW, worldH);
+            movement.updateClickMove(gardener, dt, 0, 0, worldW, worldH);
+        }
 
-        plantPanel.setCamera(camX, camY, camSX, camSY);
+        camera.follow(gardener);
+        plantPanel.setCamera(camera.camX, camera.camY, camera.camSX, camera.camSY);
 
         world.update(dt);
-
         hud.setGardenerHp(gardener.getHp());
     }
 }
