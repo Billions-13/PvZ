@@ -192,24 +192,17 @@ public class GameWorld implements ProjectileWorld {
             Zombie z = zit.next();
             z.update(dt);
 
-            boolean hitPlant = false;
-            for (Plant p : plants) {
-                if (z.isAlive() && p.isAlive()
-                        && z.getRow() == p.getRow()
-                        && z.getX() <= p.getPositionX() + 20
-                        && z.getX() >= p.getPositionX() - 10) {
-                    z.setState(ZombieState.ATTACK);
-                    hitPlant = true;
-                    if (z.canAttackNow()) {
-                        p.takeDamage(z.getDamage());
-                    }
-                    break;
-                }
-            }
+            Plant victim = (z.isAlive() ? findBiteTarget(z) : null);
 
-            if (!hitPlant && z.isAlive() && z.getState() == ZombieState.ATTACK) {
+            if (victim != null) {
+                z.setState(ZombieState.ATTACK);
+                if (z.canAttackNow()) {
+                    victim.takeDamage(z.getDamage());
+                }
+            } else if (z.isAlive() && z.getState() == ZombieState.ATTACK) {
                 z.setState(ZombieState.ADVANCE);
             }
+
 
             if (gardener != null && z.isAlive()) {
                 boolean touching = Math.abs(z.getX() - gardener.getX()) < 30 &&
@@ -267,6 +260,24 @@ public class GameWorld implements ProjectileWorld {
         }
         return best;
     }
+
+    private Plant findBiteTarget(Zombie z) {
+        Plant best = null;
+        double bestDx = Double.MAX_VALUE;
+
+        for (Plant p : plants) {
+            if (p == null || !p.isAlive()) continue;
+            if (p.getRow() != z.getRow()) continue;
+
+            double dx = Math.abs(z.getX() - p.getPositionX());
+            if (dx <= 20 && dx < bestDx) {
+                bestDx = dx;
+                best = p;
+            }
+        }
+        return best;
+    }
+
 
 
     @Override
