@@ -13,6 +13,7 @@ public class GameWorld implements ProjectileWorld {
     private final List<Projectile> projectiles = new ArrayList<>();
     private final List<Sun> suns = new ArrayList<>();
     private int sunPoints = 150;
+    private final ChomperChewController chomperChew = new ChomperChewController(4.5);
 
 
     private final GameAttackHandler attackHandler;
@@ -101,10 +102,12 @@ public class GameWorld implements ProjectileWorld {
             Plant p = pit.next();
 
             if (!p.isAlive()) {
+                chomperChew.clear(p);
                 p.onRemoved();
                 pit.remove();
                 continue;
             }
+
 
             Zombie target = findClosestZombieAhead(p.getRow(), p.getPositionX());
             boolean hasTarget = target != null;
@@ -125,13 +128,31 @@ public class GameWorld implements ProjectileWorld {
             }
 
             if (p.getPlantType() == PlantType.CHOMPER) {
-                if (hasTarget && Math.abs(target.getX() - p.getPositionX()) < 70) {
+
+                p.setAttackEnabled(false);
+
+                if (chomperChew.isChewing(p, now)) {
                     p.setSpritePath("chomper_attack.gif");
-                    target.takeDamage(target.getHp());
                 } else {
-                    p.setSpritePath("CHOMPER.gif");
+                    Zombie bite = findClosestZombieAhead(p.getRow(), p.getPositionX());
+                    if (bite != null && Math.abs(bite.getX() - p.getPositionX()) < 70) {
+                        p.setSpritePath("chomper_attack.gif");
+                        bite.takeDamage(bite.getHp());
+                        chomperChew.startChew(p, now);
+                    } else {
+                        boolean anySameRow = false;
+                        for (Zombie z : zombies) {
+                            if (z.isAlive() && z.getRow() == p.getRow()) {
+                                anySameRow = true;
+                                break;
+                            }
+                        }
+                        if (!anySameRow) p.setSpritePath("CHOMPER.gif");
+                        else p.setSpritePath("CHOMPER.gif");
+                    }
                 }
             }
+
 
             p.update(now);
 
@@ -139,11 +160,12 @@ public class GameWorld implements ProjectileWorld {
                 SunProductionBehavior b = s.getSunProductionBehavior();
                 if (b != null) b.updateSunProduction(s, now, this);
             }
-
             if (!p.isAlive()) {
+                chomperChew.clear(p);
                 p.onRemoved();
                 pit.remove();
             }
+
         }
 
 
