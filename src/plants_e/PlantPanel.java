@@ -22,6 +22,11 @@ public class PlantPanel extends JPanel {
 
     private int camX, camY, camSX, camSY;
 
+    // ===== GRID CONFIG (GAMEPLAY GRID) =====
+    private static final int GRID_ROWS = 7;
+    private static final int GRID_COLS = 12;
+
+
     private BufferedImage stand;
     private final BufferedImage[] run = new BufferedImage[3];
     private final BufferedImage[] collect = new BufferedImage[3];
@@ -102,6 +107,35 @@ public class PlantPanel extends JPanel {
         repaint();
     }
 
+    // ===== DRAW GAMEPLAY GRID (7x13) =====
+    private void drawGrid(Graphics2D g2) {
+        g2.setColor(new Color(150, 70, 60)); // nâu
+        g2.setStroke(new BasicStroke(1.25f));   // nét dày
+
+        // Hàng ngang
+        for (int r = 0; r <= GRID_ROWS; r++) {
+            int y = r * TILE - camY + camSY;
+            g2.drawLine(
+                    -camX + camSX,
+                    y,
+                    GRID_COLS * TILE - camX + camSX,
+                    y
+            );
+        }
+
+        // Cột dọc
+        for (int c = 0; c <= GRID_COLS; c++) {
+            int x = c * TILE - camX + camSX;
+            g2.drawLine(
+                    x,
+                    -camY + camSY,
+                    x,
+                    GRID_ROWS * TILE - camY + camSY
+            );
+        }
+    }
+
+
     private void applyCameraToAllViews() {
         for (PlantView pv : sync.getPlantViews()) {
             JComponent c = pv.getLabel();
@@ -134,6 +168,8 @@ public class PlantPanel extends JPanel {
 
         if (tileManager != null) {
             tileManager.draw(g2, camX, camY, camSX, camSY);
+            drawGrid(g2);
+
         }
 
         long now = System.nanoTime();
