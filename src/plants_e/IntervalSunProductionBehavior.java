@@ -30,8 +30,8 @@ public class IntervalSunProductionBehavior implements SunProductionBehavior {
 
 
         if (source.getRow() == 1) {
-            x += 55;
-            y += 35;
+            x += 65;
+            y += 55;
         }
 
         world.addSun(new Sun(x, y, sunAmount, false, y));

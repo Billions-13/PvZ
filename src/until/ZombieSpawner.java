@@ -49,7 +49,7 @@ public class ZombieSpawner {
         timer = 0;
 
         int gridRows = 7;
-        int row = 1 + (spawned % (gridRows - 1));  // chỉ 1..6, không bao giờ 0
+        int row = 1 + (int)(Math.random() * (gridRows - 1));  // chỉ 1..6, không bao giờ 0
         double y = row * 80;       // hoặc TILE nếu bạn có hằng TILE
 
 
