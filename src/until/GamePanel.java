@@ -20,6 +20,7 @@ public class GamePanel extends JPanel {
     public final int mheight = 600;
 
     private final Keybind key = new Keybind();
+    private final JLayeredPane layers = new JLayeredPane();
 
     private final GameAttackHandler attackHandler = new GameAttackHandler();
     private final GameWorld world = new GameWorld(attackHandler);
@@ -61,29 +62,21 @@ public class GamePanel extends JPanel {
         world.setSpawner(spawner);
         world.setGardener(gardener);
 
+        layers.setBounds(0, 0, 900, 600);
+        layers.setLayout(null);
+        add(layers);
+//từ đoạn này
         hud.setBounds(0, 0, 900, 40);
         plantPanel.setBounds(0, 40, 900, 560);
-
-        add(hud);
-        add(plantPanel);
-
-        BoardLayer board = new BoardLayer(
-                mwidth,
-                mheight - 40,
-                7,
-                80
-        );
-        board.setBounds(0, 40, mwidth, mheight - 40);
-        add(board);
-        setComponentZOrder(board, getComponentCount() - 1);
-
         gardenerLayer.setBounds(0, 40, 900, 560);
-        add(gardenerLayer);
-
         selectBar.setBounds(10, 50, PlantSelectBar.W, PlantSelectBar.H);
-        add(selectBar);
-        setComponentZOrder(selectBar, 0);
 
+        layers.add(plantPanel, Integer.valueOf(0));
+        layers.add(gardenerLayer, Integer.valueOf(1));
+        layers.add(selectBar, Integer.valueOf(2));
+        layers.add(hud, Integer.valueOf(3));
+
+//đến đoạn này là ổn định tình trạng bar
         input = new InputController(
                 this,
                 plantPanel,

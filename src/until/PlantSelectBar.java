@@ -5,11 +5,11 @@ import plants_e.PlantType;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class PlantSelectBar extends JPanel {
@@ -31,6 +31,7 @@ public class PlantSelectBar extends JPanel {
         final int cost;
         final double cooldown;
         double cdRemain;
+
         Item(PlantType type, BufferedImage img, int cost, double cooldown) {
             this.type = type;
             this.img = img;
@@ -39,14 +40,17 @@ public class PlantSelectBar extends JPanel {
         }
     }
 
-
     private final List<Item> items = new ArrayList<>();
     private Listener listener;
     private int selectedIndex = -1;
 
+    private BufferedImage cacheImg;
+    private boolean cacheDirty = true;
+
     public PlantSelectBar() {
         setOpaque(false);
         setDoubleBuffered(true);
+        setPreferredSize(new Dimension(W, H));
         setSize(W, H);
 
         setFocusable(false);
@@ -57,9 +61,7 @@ public class PlantSelectBar extends JPanel {
         addItem("snowpea.png", PlantType.SNOWPEA, 175, 7.5);
         addItem("chomper1.png", PlantType.CHOMPER, 150, 7.0);
         addItem("peashooter.png", PlantType.PEASHOOTER, 100, 7.5);
-
         addItem("shovel.png", null, 0, 0);
-
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -67,16 +69,25 @@ public class PlantSelectBar extends JPanel {
                 int idx = hitIndex(e.getX(), e.getY());
                 if (idx < 0) return;
                 selectedIndex = idx;
+                cacheDirty = true;
                 repaint();
                 if (listener != null) listener.onPick(items.get(idx).type);
+            }
+        });
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                cacheDirty = true;
+                repaint();
             }
         });
     }
 
     private void addItem(String file, PlantType type, int cost, double cooldown) {
         items.add(new Item(type, loadScaled(BASE + file, ICON, ICON), cost, cooldown));
+        cacheDirty = true;
     }
-
 
     private BufferedImage loadScaled(String path, int w, int h) {
         try {
@@ -102,25 +113,36 @@ public class PlantSelectBar extends JPanel {
     }
 
     public void clearSelection() {
-        selectedIndex = -1;
-        repaint();
+        if (selectedIndex != -1) {
+            selectedIndex = -1;
+            cacheDirty = true;
+            repaint();
+        }
     }
 
     public void tick(double dt) {
         if (dt <= 0) return;
+
+        boolean changed = false;
         for (Item it : items) {
             if (it.cdRemain > 0) {
+                int beforeTenths = (int) (it.cdRemain * 10.0);
                 it.cdRemain -= dt;
                 if (it.cdRemain < 0) it.cdRemain = 0;
+                int afterTenths = (int) (it.cdRemain * 10.0);
+                if (beforeTenths != afterTenths) changed = true;
             }
         }
-        repaint();
+
+        if (changed) {
+            cacheDirty = true;
+            repaint();
+        }
     }
 
     public boolean canPick(PlantType type) {
         int idx = indexOf(type);
-        if (idx < 0) return false;
-        return items.get(idx).cdRemain <= 0;
+        return idx >= 0 && items.get(idx).cdRemain <= 0;
     }
 
     public int getCost(PlantType type) {
@@ -135,7 +157,11 @@ public class PlantSelectBar extends JPanel {
 
     public void startCooldown(PlantType type) {
         int idx = indexOf(type);
-        if (idx >= 0) items.get(idx).cdRemain = items.get(idx).cooldown;
+        if (idx >= 0) {
+            items.get(idx).cdRemain = items.get(idx).cooldown;
+            cacheDirty = true;
+            repaint();
+        }
     }
 
     private int indexOf(PlantType type) {
@@ -144,30 +170,39 @@ public class PlantSelectBar extends JPanel {
         return -1;
     }
 
+    private void rebuildCache() {
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) return;
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
+        if (cacheImg == null || cacheImg.getWidth() != w || cacheImg.getHeight() != h) {
+            cacheImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        }
 
+        Graphics2D g2 = cacheImg.createGraphics();
+
+        g2.setComposite(AlphaComposite.Src);
+        g2.setColor(new Color(0, 0, 0, 0));
+        g2.fillRect(0, 0, w, h);
+
+        g2.setComposite(AlphaComposite.SrcOver);
         g2.setColor(new Color(0, 0, 0, 120));
-        g2.fillRect(0, 0, getWidth(), getHeight());
-
+        g2.fillRect(0, 0, w, h);
 
         for (int i = 0; i < items.size(); i++) {
             int x = GAP + i * (ICON + GAP);
             int y = GAP;
 
-            g2.drawImage(items.get(i).img, x, y, null);
-
             Item it = items.get(i);
+            g2.drawImage(it.img, x, y, null);
+
             if (it.type != null) {
                 g2.setColor(Color.WHITE);
-                g2.drawString(String.valueOf(it.cost), x + 2, y - 2 + 10);
+                g2.drawString(String.valueOf(it.cost), x + 2, y + 10);
 
                 if (it.cdRemain > 0) {
                     g2.setColor(Color.YELLOW);
-                    String s = String.format(java.util.Locale.US, "%.1f", it.cdRemain);
-                    g2.drawString(s, x + 2, y + ICON - 4);
+                    g2.drawString(String.format(Locale.US, "%.1f", it.cdRemain), x + 2, y + ICON - 4);
                 }
             }
 
@@ -178,9 +213,19 @@ public class PlantSelectBar extends JPanel {
         }
 
         g2.dispose();
+        cacheDirty = false;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (cacheDirty) rebuildCache();
+        if (cacheImg != null) g.drawImage(cacheImg, 0, 0, null);
     }
 
     public void setListener(Listener listener) {
         this.listener = listener;
+        //repaint();
     }
+
 }
