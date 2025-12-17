@@ -42,9 +42,13 @@ public class Snowpea extends Plant {
         }
 
         if (isTargeting() && canAct(currentTime)) {
+            setSpritePath("Snowpea_attack.gif");
             doAttack();
             setLastActTime(currentTime);
+        } else {
+            setSpritePath("Snowpea_idle.gif");
         }
+
     }
 
     @Override
