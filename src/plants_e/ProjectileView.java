@@ -12,17 +12,11 @@ public class ProjectileView {
     public ProjectileView(Projectile projectile) {
         this.projectile = projectile;
 
-        String resourcePath = projectile.getType() == ProjectileType.ICE_PEA
-                ? firstExisting(
-                "/resources/img_P/projectile_snowpea.png",
-                "/resources/img_P/PROJECTILE_SNOW.png",
-                "/resources/img_P/projectile_of_snow.png"
-        )
-                : firstExisting(
-                "/resources/img_P/PROJECTILE.png"
-        );
+        URL url = projectile.getType() == ProjectileType.ICE_PEA
+                ? require("/resources/img_P/PROJECTILE_SNOW.png")
+                : require("/resources/img_P/PROJECTILE.png");
 
-        ImageIcon raw = new ImageIcon(resourcePath);
+        ImageIcon raw = new ImageIcon(url);
         Image scaled = raw.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
 
         label = new JLabel(new ImageIcon(scaled));
@@ -31,12 +25,10 @@ public class ProjectileView {
         label.setOpaque(false);
     }
 
-    private String firstExisting(String... candidates) {
-        for (String p : candidates) {
-            URL url = getClass().getResource(p);
-            if (url != null) return url.toString();
-        }
-        throw new IllegalArgumentException("Missing projectile sprite. Tried: " + String.join(", ", candidates));
+    private URL require(String path) {
+        URL url = getClass().getResource(path);
+        if (url == null) throw new IllegalArgumentException("Missing projectile sprite: " + path);
+        return url;
     }
 
     private void updatePosition(int camX, int camY, int camSX, int camSY) {

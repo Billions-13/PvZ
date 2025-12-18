@@ -41,9 +41,13 @@ public class ZombieView {
         });
     }
 
+    private static final int TILE = 80;
+    private static final int ROW_VISUAL_OFFSET = -TILE;
+
+
     private void updatePosition(int camX, int camY, int camSX, int camSY) {
         int sx = (int) Math.round(zombie.getX() * 2 - camX + camSX);
-        int sy = (int) Math.round(zombie.getY() * 2 - camY + camSY);
+        int sy = (int) Math.round(zombie.getY() * 2 - camY + camSY + ROW_VISUAL_OFFSET);
         label.setLocation(sx, sy);
     }
 
