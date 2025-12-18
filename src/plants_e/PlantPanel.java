@@ -170,14 +170,20 @@ public class PlantPanel extends JPanel {
 
         for (ProjectileView pv : sync.getProjectileViews()) place(pv.getLabel(), pv.getProjectile().getX(), pv.getProjectile().getY());
         for (SunView sv : sync.getSunViews()) place(sv.getLabel(), sv.getSun().getX(), sv.getSun().getY());
-        for (ZombieView zv : sync.getZombieViews()) place(zv.getLabel(),
-                zv.getZombie().getX() * 2,
-                zv.getZombie().getY() * 2);
+        for (ZombieView zv : sync.getZombieViews()) placeCentered(zv.getLabel(),
+                zv.getZombie().getX(),
+                zv.getZombie().getY()-10);
     }
 
     private void place(JComponent c, double worldX, double worldY) {
         int sx = (int) Math.round(worldX - camX + camSX);
         int sy = (int) Math.round(worldY - camY + camSY);
+        c.setLocation(sx, sy);
+    }
+
+    private void placeCentered(JComponent c, double centerX, double centerY) {
+        int sx = (int) Math.round(centerX - camX + camSX - c.getWidth() / 2.0);
+        int sy = (int) Math.round(centerY - camY + camSY - c.getHeight() / 2.0 + 30);
         c.setLocation(sx, sy);
     }
 
@@ -202,16 +208,16 @@ public class PlantPanel extends JPanel {
 
                 Image imgZ = zombieImg(sprite);
 
-                int zx = (int) Math.round(z.getX() - camX + camSX);
-                int zy = (int) Math.round(z.getY() - camY + camSY);
+
 
                 int ZW = 125;
                 int ZH = 125;
+                int zx = (int) Math.round(z.getX() - camX + camSX - ZW / 2.0);
+                int zy = (int) Math.round(z.getY() - camY + camSY - ZH / 2.0 - 30 );
 
-                g2.drawImage(imgZ, zx - (ZW - 80) / 2, zy - (ZH - 80) / 2, ZW, ZH, this);
+                g2.drawImage(imgZ, zx, zy, ZW, ZH, this);
 
             }
-
 
         }
 
