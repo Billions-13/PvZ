@@ -60,41 +60,18 @@ public class ZombieSpawner {
         final int GRID_COLS = 12;  // 0..11
 
 // ===== ROW: chỉ spawn trong 7 hàng lưới =====
-        int row = (int) (Math.random() * GRID_ROWS); // 0..6
-        double y = row * (double) TILE;
-
+        int row = 1 + (int) (Math.random() * (GRID_ROWS - 1)); // tránh hàng 0
+        double y = row * (double) TILE + TILE / 2.0;
 // ===== X: spawn sát MÉP PHẢI của lưới =====
 // lưới kết thúc ở cột 11 → zombie đứng ngay ngoài cột đó
         double x = GRID_COLS * (double) TILE + 4;
 
 // ===== TRỘN ĐỦ 4 LOẠI ZOMBIE =====
-        ZombieType type = switch (world.getWave()) {
-            case 1 -> (Math.random() < 0.85)
-                    ? ZombieType.NORMAL
-                    : ZombieType.FLAG;
-
-            case 2 -> {
-                double r = Math.random();
-                yield (r < 0.55) ? ZombieType.NORMAL
-                        : (r < 0.90) ? ZombieType.CONE_HEAD
-                        : ZombieType.FLAG;
-            }
-
-            case 3 -> {
-                double r = Math.random();
-                yield (r < 0.45) ? ZombieType.CONE_HEAD
-                        : (r < 0.85) ? ZombieType.BUCKET_HEAD
-                        : ZombieType.FLAG;
-            }
-
-            default -> {
-                double r = Math.random();
-                yield (r < 0.35) ? ZombieType.NORMAL
-                        : (r < 0.60) ? ZombieType.CONE_HEAD
-                        : (r < 0.90) ? ZombieType.BUCKET_HEAD
-                        : ZombieType.FLAG;
-            }
-        };
+        double r = Math.random();
+        ZombieType type = (r < 0.25) ? ZombieType.NORMAL
+                : (r < 0.50) ? ZombieType.CONE_HEAD
+                : (r < 0.75) ? ZombieType.BUCKET_HEAD
+                : ZombieType.FLAG;
 
 
         Zombie z = ZombieFactory.createZombie(type, row, x, y);

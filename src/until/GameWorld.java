@@ -213,7 +213,8 @@ public class GameWorld implements ProjectileWorld {
         while (zit.hasNext()) {
             Zombie z = zit.next();
             z.update(dt);
-
+// Ghìm zombie đúng hàng lưới (center tile) để tránh lệch row khi render.
+            z.setY(z.getRow() * tile + tile / 2.0);
             Plant victim = (z.isAlive() ? findBiteTarget(z) : null);
 
             if (victim != null) {
@@ -240,7 +241,7 @@ public class GameWorld implements ProjectileWorld {
                 }
             }
 
-            if (z.getX() <= 2 * tile) lose = true;
+            if (z.getX() <= 0) lose = true;
 
 
             if (z.isDead()) {

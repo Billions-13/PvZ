@@ -121,7 +121,7 @@ public abstract class Zombie {
     public boolean isDead() { return dead; }
     public boolean isAlive() { return !dead; }
     public ZombieState getState() { return state; }
-
+    public void setY(double y) { this.y = y; }
     public String getAdvanceSprite() {
         return slowRemaining > 0 ? frozenAdvanceSprite : normalAdvanceSprite;
     }

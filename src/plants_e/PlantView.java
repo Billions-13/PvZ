@@ -24,18 +24,26 @@ public class PlantView {
 
     public PlantView(Plant plant) {
         this.plant = plant;
-
+        ImageIcon icon;
         String spritePath = plant.getSpritePath();
-        if (spritePath == null || spritePath.isEmpty()) spritePath = "default_plant.gif";
-        lastSpritePath = spritePath;
+        if (plant.getPlantType() == PlantType.SNOWPEA) {
+            // Snowpea dùng khung animation riêng, bỏ qua sprite mặc định để tránh nháy ảnh tĩnh.
+            img = loadPng("snowpea1.png");
+            lastSpritePath = "snowpea1.png";
+            icon = new ImageIcon(img);
+        } else {
+            if (spritePath == null || spritePath.isEmpty()) spritePath = "default_plant.gif";
+            lastSpritePath = spritePath;
 
-        ImageIcon icon = new ImageIcon(Objects.requireNonNull(
-                getClass().getResource("/resources/img_P/" + spritePath)
-        ));
 
-        img = icon.getImage();
+            icon = new ImageIcon(Objects.requireNonNull(
+                    getClass().getResource("/resources/img_P/" + spritePath)
+            ));
 
-        if (plant.getPlantType() == PlantType.WALNUT) {
+            img = icon.getImage();
+        }
+
+        if (plant.getPlantType() == PlantType.WALNUT && icon != null) {
             w = icon.getIconWidth();
             h = icon.getIconHeight();
         } else {
