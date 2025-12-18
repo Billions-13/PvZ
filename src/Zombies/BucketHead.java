@@ -7,7 +7,7 @@ public class BucketHead extends Zombie {
 
     public BucketHead(int row, double startX, double startY) {
         super(row, startX, startY, 190, 10, 4.7);
-        normalAdvanceSprite = "/resources/img_Z/BucketheadZombie/BucketheadZombie.gif";
+        normalAdvanceSprite = "/resources/img_Z/BucketheadZombie/Buckethead.gif";
         normalAttackSprite  = "/resources/img_Z/BucketheadZombie/BucketheadZombieAttack.gif";
         frozenAdvanceSprite = "/resources/img_Z/BucketheadZombie/frozenBucketheadZombie.gif";
         frozenAttackSprite  = "/resources/img_Z/BucketheadZombie/frozenBucketheadZombieAttack.gif";
