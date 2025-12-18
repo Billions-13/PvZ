@@ -30,7 +30,7 @@ public class    Sunflower extends Plant {
         );
 
         if (sunProductionBehavior == null) {
-            this.sunProductionBehavior = new IntervalSunProductionBehavior(24.0, 25);
+            this.sunProductionBehavior = new IntervalSunProductionBehavior(35.0, 25);
         } else {
             this.sunProductionBehavior = sunProductionBehavior;
         }

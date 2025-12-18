@@ -29,7 +29,7 @@ public class GameWorld implements ProjectileWorld {
 
     private double gameTime;
     private double skySunTimer;
-    private double skySunInterval = 6.0;
+    private double skySunInterval = 15.0;
 
 
 
@@ -134,21 +134,18 @@ public class GameWorld implements ProjectileWorld {
                 if (chomperChew.isChewing(p, now)) {
                     p.setSpritePath("chomper-eating-zombie.gif");
                 } else {
-                    Zombie bite = findClosestZombieAhead(p.getRow(), p.getPositionX());
-                    if (bite != null && Math.abs(bite.getX() - p.getPositionX()) < 70) {
+                    Zombie near = findClosestZombieAhead(p.getRow(), p.getPositionX());
+                    boolean hasNear = near != null && Math.abs(near.getX() - p.getPositionX()) < 100;
+
+                    if (hasNear) {
                         p.setSpritePath("chomper-eating-zombie.gif");
-                        bite.takeDamage(bite.getHp());
-                        chomperChew.startChew(p, now);
                     } else {
-                        boolean anySameRow = false;
-                        for (Zombie z : zombies) {
-                            if (z.isAlive() && z.getRow() == p.getRow()) {
-                                anySameRow = true;
-                                break;
-                            }
-                        }
-                        if (!anySameRow) p.setSpritePath("CHOMPER.gif");
-                        else p.setSpritePath("CHOMPER.gif");
+                        p.setSpritePath("CHOMPER.gif");
+                    }
+
+                    if (hasNear) {
+                        near.takeDamage(near.getHp());
+                        chomperChew.startChew(p, now);
                     }
                 }
             }
@@ -283,6 +280,8 @@ public class GameWorld implements ProjectileWorld {
         return best;
     }
 
+    private static final double ZOMBIE_ATTACK_RANGE = 60;
+
     private Plant findBiteTarget(Zombie z) {
         Plant best = null;
         double bestDx = Double.MAX_VALUE;
@@ -292,13 +291,14 @@ public class GameWorld implements ProjectileWorld {
             if (p.getRow() != z.getRow()) continue;
 
             double dx = Math.abs(z.getX() - p.getPositionX());
-            if (dx <= 20 && dx < bestDx) {
+            if (dx <= ZOMBIE_ATTACK_RANGE && dx < bestDx) {
                 bestDx = dx;
                 best = p;
             }
         }
         return best;
     }
+
 
 
 
