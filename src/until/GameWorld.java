@@ -132,11 +132,11 @@ public class GameWorld implements ProjectileWorld {
                 p.setAttackEnabled(false);
 
                 if (chomperChew.isChewing(p, now)) {
-                    p.setSpritePath("chomper_attack.gif");
+                    p.setSpritePath("chomper-eating-zombie.gif");
                 } else {
                     Zombie bite = findClosestZombieAhead(p.getRow(), p.getPositionX());
                     if (bite != null && Math.abs(bite.getX() - p.getPositionX()) < 70) {
-                        p.setSpritePath("chomper_attack.gif");
+                        p.setSpritePath("chomper-eating-zombie.gif");
                         bite.takeDamage(bite.getHp());
                         chomperChew.startChew(p, now);
                     } else {
