@@ -190,7 +190,7 @@ public class PlantPanel extends JPanel {
             tileManager.draw(g2, camX, camY, camSX, camSY);
             drawGrid(g2);
 
-            for (Zombie z : world.getZombies()) {
+            for (Zombie z : new java.util.ArrayList<>(world.getZombies())) {
                 if (z == null) continue;
 
                 String sprite = switch (z.getState()) {
@@ -209,7 +209,7 @@ public class PlantPanel extends JPanel {
                 int ZH = 125;
 
                 g2.drawImage(imgZ, zx - (ZW - 80) / 2, zy - (ZH - 80) / 2, ZW, ZH, this);
-                repaint ();
+
             }
 
 

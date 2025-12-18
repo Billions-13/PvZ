@@ -25,10 +25,18 @@ public class ZombieView {
 
     private ImageIcon iconOf(String spritePath) {
         return cache.computeIfAbsent(spritePath, p -> {
-            var url = getClass().getResource(p);
-            if (url == null) throw new IllegalArgumentException("Missing zombie sprite: " + p);
-            ImageIcon raw = new ImageIcon(url);
+            java.net.URL url = getClass().getResource(p);
 
+            if (url == null && !p.startsWith("/resources/")) {
+                url = getClass().getResource("/resources" + p);
+            }
+            if (url == null && p.startsWith("/img_Z/")) {
+                url = getClass().getResource("/resources" + p);
+            }
+
+            if (url == null) throw new IllegalArgumentException("Missing zombie sprite: " + p);
+
+            ImageIcon raw = new ImageIcon(url);
             Image scaled = raw.getImage().getScaledInstance(ZW, ZH, Image.SCALE_SMOOTH);
             return new ImageIcon(scaled);
         });
