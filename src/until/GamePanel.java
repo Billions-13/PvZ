@@ -2,11 +2,10 @@ package until;
 
 import Tile.Manager;
 import entity.Gardener;
+import javax.swing.*;
 import plants_e.GameAttackHandler;
 import plants_e.PlantFactory;
 import plants_e.PlantPanel;
-
-import javax.swing.*;
 
 public class GamePanel extends JPanel {
 
@@ -14,8 +13,8 @@ public class GamePanel extends JPanel {
     private final CursorManager cursor;
 
     public final int block = 40;
-    public final int maxcol = 45;
-    public final int maxrow = 30;
+    public final int maxcol = 13;
+    public final int maxrow = 6;
     public final int mwidth = 900;
     public final int mheight = 600;
 

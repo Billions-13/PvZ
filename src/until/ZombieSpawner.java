@@ -24,7 +24,7 @@ public class ZombieSpawner {
 
     public void setWave(int wave) {
         spawned = 0;
-        timer = 0;
+        timer = -3.0;  // delay 3 giây trước khi spawn zombie đầu tiên
 
         total = switch (wave) {
             case 1 -> 6;
@@ -56,15 +56,14 @@ public class ZombieSpawner {
 
 
         // ===== GRID CONFIG =====
-        final int GRID_ROWS = 7;   // 0..6
-        final int GRID_COLS = 12;  // 0..11
+        final int GRID_ROWS = 6;   // 0..5 (chỉ spawn trong 5 hàng dưới cùng: 1-5)
 
-// ===== ROW: chỉ spawn trong 7 hàng lưới =====
-        int row = 1 + (int) (Math.random() * (GRID_ROWS - 1)); // tránh hàng 0
+// ===== ROW: chỉ spawn trong 5 hàng dưới cùng =====
+        int row = 1 + (int) (Math.random() * (GRID_ROWS - 1)); // hàng 1-5
         double y = row * (double) TILE + TILE / 2.0;
-// ===== X: spawn sát MÉP PHẢI của lưới =====
-// lưới kết thúc ở cột 11 → zombie đứng ngay ngoài cột đó
-        double x = GRID_COLS * (double) TILE + 4;
+// ===== X: spawn bên phải grid, cách xa đủ để visible trong camera =====
+// spawn ở x = 900 để zombie slowly walk vào
+        double x = 900;
 
 // ===== TRỘN ĐỦ 4 LOẠI ZOMBIE =====
         double r = Math.random();

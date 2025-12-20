@@ -10,7 +10,7 @@ public class Chomper extends Plant {
 
     public Chomper(int row, int col, double positionX, double positionY) {
         super("Chomper",
-                default_health,
+                default_health  ,
                 damage,
                 biteCooldown,   // dùng chung làm attackSpeed
                 cooldown,

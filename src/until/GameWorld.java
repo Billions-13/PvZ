@@ -1,10 +1,9 @@
 package until;
 
-import plants_e.*;
 import Zombies.*;
 import entity.*;
-
 import java.util.*;
+import plants_e.*;
 
 public class GameWorld implements ProjectileWorld {
 
@@ -188,8 +187,8 @@ public class GameWorld implements ProjectileWorld {
             if (skySunTimer >= skySunInterval) {
                 skySunTimer = 0;
 
-                int cols = 11;
-                int rows = 7;
+                int cols = 10;  // chỉ trong 10 cột dưới cùng (0-9)
+                int rows = 6;   // chỉ trong 5 hàng dưới cùng (1-5)
 
                 int col = 1 + (int) (Math.random() * (cols - 1));
                 int row = 1 + (int) (Math.random() * (rows - 1));
@@ -237,7 +236,7 @@ public class GameWorld implements ProjectileWorld {
                 }
             }
 
-            if (z.getX() <= 0) lose = true;
+            if (z.getX() < 80) lose = true;
 
 
             if (z.isDead()) {

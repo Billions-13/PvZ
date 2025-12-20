@@ -1,5 +1,5 @@
 package plants_e;
-public abstract class Plant {
+public abstract class   Plant {
 
     protected String name;
     protected int health;
@@ -206,15 +206,20 @@ public abstract class Plant {
     /** Kiểm tra plant có đủ điều kiện để hành động (tấn công) không. */
     protected boolean canAct(double currentTime) {
         if (!isAlive) return false;
-        if (!attackEnabled) return false;
+        /**còn sống nhưng đang bận*/
+        if (!attackEnabled) return false; //dùng cho chomper nó đang nhai không được cắn tiếp con zombie sau
+        /**dùng để đổi hoạt ảnh cho mượt
+         * ví dụ 1 con plant nào đó nó có hoạt ảnh gục xuống thì khoảng time này
+         * gọi là DYING thì có thời gian trống chỗ này cấm bắn luôn
+         */
         if (state == PlantState.DEAD || state == PlantState.DYING) return false;
+        //chống bắn liên tục/frame
         double elapsed = currentTime - getLastActTime();
         return elapsed >= getAttackSpeed();
     }
 
     /**
-     * Thực hiện tấn công theo Strategy nếu có.
-     * Subclass gọi hàm này trong update().
+     * Subclass gọi hàm này trong update()
      * tránh tình trạng spam attack mà k cooldown
      */
     protected void doAttack() {

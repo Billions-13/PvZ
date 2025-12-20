@@ -7,7 +7,7 @@ public final class MovementController {
     private Double targetX;
     private Double targetY;
 
-    private static final double SPEED = 220.0;
+    private static final double SPEED = 150.0;
     private static final double ARRIVE_EPS = 2.0;
 
     public void setTarget(double x, double y) {
