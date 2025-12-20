@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import Zombies.Zombie;
 
 /**
  * GameAttackHandler là hiện thực AttackHandler:
@@ -53,7 +52,6 @@ public class GameAttackHandler implements AttackHandler {
                 + " projectile with damage=" + source.getAttackDamage()
                 + ", effect=" + source.getSpecialEffect();
         combatLog.add(log);
-        System.out.println(log);
     }
 
     /**
@@ -81,7 +79,6 @@ public class GameAttackHandler implements AttackHandler {
                         + " in row " + p.getRow()
                         + " deals damage=" + p.getDamage();
                 combatLog.add(log);
-                System.out.println(log);
                 it.remove();
             }
         }

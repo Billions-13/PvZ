@@ -15,13 +15,5 @@ public class BiteAttackBehavior implements AttackBehavior {
         if (handler != null) {
             handler.handleAttack(source);
         }
-
-        System.out.println(
-                "[BITE] " + source.getPlantType().getDisplayName()
-                        + " at (row=" + source.getRow()
-                        + ", col=" + source.getCol()
-                        + ") bites with damage=" + source.getAttackDamage()
-                        + ", effect=" + source.getSpecialEffect()
-        );
     }
 }

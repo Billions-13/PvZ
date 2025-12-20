@@ -11,13 +11,5 @@ public class SingleProjectileAttackBehavior implements AttackBehavior {
         if (handler != null) {
             handler.handleAttack(source);
         }
-
-        System.out.println(
-                "[ATTACK] " + source.getPlantType()
-                        + " (row=" + source.getRow()
-                        + ", col=" + source.getCol()
-                        + ") fires projectile, dmg=" + source.getAttackDamage()
-                        + ", effect=" + source.getSpecialEffect()
-        );
     }
 }

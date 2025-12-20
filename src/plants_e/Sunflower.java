@@ -43,7 +43,6 @@ public class    Sunflower extends Plant {
 
     @Override
     public void onPlaced() {
-        System.out.println("Sunflower planted at row " + getRow() + ", col " + getCol());
     }
 
     @Override

@@ -13,9 +13,9 @@ public class ZombieSpawner {
     private double interval;
 
     private static final int TILE = 80;
-    private static final int GRID_ROWS = 7; // 0..6
+    private static final int GRID_ROWS = 6; // 0..5
     private static final int SPAWN_SAFE_COL = 3; // tránh thua ngay vì GameWorld lose khi x <= 2*TILE
-    private static final int GRID_COLS = 12; // 0..11 là trong lưới
+    private static final int GRID_COLS = 10; // 0..9 là trong lưới
 
     public ZombieSpawner(GameWorld world) {
         this.world = world;

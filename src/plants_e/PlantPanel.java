@@ -1,21 +1,16 @@
 package plants_e;
 
 import Tile.Manager;
+import Zombies.Zombie;
 import Zombies.ZombieView;
-import until.GameWorld;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Objects;
-
-
-import Zombies.Zombie;
-import Zombies.ZombieState;
-import javax.swing.ImageIcon;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import until.GameWorld;
 
 
 public class PlantPanel extends JPanel {
@@ -31,8 +26,8 @@ public class PlantPanel extends JPanel {
     private int camX, camY, camSX, camSY;
 
     // ===== GRID CONFIG (GAMEPLAY GRID) =====
-    private static final int GRID_ROWS = 7;
-    private static final int GRID_COLS = 12;
+    private static final int GRID_ROWS = 6;
+    private static final int GRID_COLS = 10;
 
 
     private BufferedImage stand;
