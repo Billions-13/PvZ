@@ -190,7 +190,7 @@ public class PlantPanel extends JPanel {
         if (tileManager != null) {
             tileManager.draw(g2, camX, camY, camSX, camSY);
             drawGrid(g2);
-
+//đoạn quan trọng khi xóa zombie mất luôn
             for (Zombie z : new java.util.ArrayList<>(world.getZombies())) {
                 if (z == null) continue;
 
